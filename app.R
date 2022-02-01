@@ -22,22 +22,31 @@ options(scipen = 100000)
 textile.data<- read_xlsx("WICVOC012021.xlsx")
 
 #Takes schock and changes to pieces, takes half ps and changes to ps
-assign3<- textile.data %>% mutate(real_quantity = 0, real_guldens = 0) #create real value collumn
+assign3<- textile.data %>% mutate(real_quantity = 0, real_guldens = 0, clean_unit = "NO") #create real value collumn
 
 for(i in 1:length(textile.data$textile_unit)){ 
   if (textile.data$textile_unit[i] %in% c("schock", "Schock", "schok")){ #fix the schock unit (x4)
-    assign3$real_quantity[i] <- as.numeric(textile.data$textile_quantity[i])*4 
+    assign3$real_quantity[i] <- as.numeric(textile.data$textile_quantity[i])*4
+      assign3$clean_unit[i] = str_replace(assign3$clean_unit[i], "NO", "ps")
   }
   else if(textile.data$textile_unit[i] == "half ps."){ #fix the half ps. unit (/2)
     assign3$real_quantity[i] <- as.numeric(textile.data$textile_quantity[i])/2
+    assign3$clean_unit[i] = str_replace(assign3$clean_unit[i], "NO", "ps")
   }
-  else  if(textile.data$textile_unit[i] == "el"){
+  else  if(textile.data$textile_unit[i] %in% c("el")){
     assign3$real_quantity[i] <- as.numeric(textile.data$textile_quantity[i])*as.numeric(assign3$els_per_ps[i], na.rm = TRUE)
+    assign3$clean_unit[i] = str_replace(assign3$clean_unit[i], "NO", "ps")
+  }
+  else  if(textile.data$textile_unit[i] %in% c("ps","stux", "ps.")){
+    assign3$real_quantity[i] <- as.numeric(textile.data$textile_quantity[i])
+    assign3$clean_unit[i] = str_replace(assign3$clean_unit[i], "NO", "ps")
   }
   else{
     assign3$real_quantity[i] <- as.numeric(textile.data$textile_quantity[i]) #for now ignore rolls, els, and lbs- filter these units out in analysis
   }
 }
+
+
 
 ##Modify Indian Guidlers to Guilders
 for(i in 1:length(assign3$shipment_currency)){ 
@@ -50,6 +59,16 @@ for(i in 1:length(assign3$shipment_currency)){
 }
 
 #10.5 Dutch guilders = 15 Indian guilders
+
+###Working on Units
+zzz<- assign3 %>%
+  group_by(clean_unit) %>%
+  summarise (sum = sum(real_guldens, na.rm = TRUE))
+
+zw<- assign3 %>%
+  filter(clean_unit == "NO") %>%
+  group_by(textile_name) %>%
+  summarise(sum = sum(real_guldens, na.rm  = TRUE))
 
 ## Change Guinea to Elmina
 assign3$dest_loc_region_arch = str_replace(assign3$dest_loc_region_arch, "Guinea", "Elmina")
@@ -463,7 +482,7 @@ reset_map <- function(output,input,location){
       
       print(paste(myLoc, "resetting map..."))
         
-        return_graph <- ab %>% 
+        return_graph <- ab.dest %>% 
             leaflet() %>%
           addProviderTiles("CartoDB.PositronNoLabels") %>%
            # addTiles %>%
