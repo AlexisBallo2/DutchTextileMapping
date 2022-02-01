@@ -453,7 +453,7 @@ ui <- fluidPage(
                ),
         ),
       
-        plotOutput(outputId = "plot"),
+        plotlyOutput(outputId = "plot"),
         leafletOutput(outputId = "dropdown")
 )
 
@@ -474,7 +474,7 @@ server <- function(input, output, session) {
     reset_map(output,input, NULL)
     
     
-    output$plot <- renderPlot({
+    output$plot <- renderPlotly({
         
         if(is.null(input$map_shape_click$id)){
             return()
