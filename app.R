@@ -765,38 +765,6 @@ server <- function(input, output, session) {
                        
                      reset_map(output,input, NULL)
                      
-
-                  
-                       require(scales)
-                       test <- assign3 %>%
-                           filter(orig_loc_region_arch == myLoc)
-                       test <- assign3 %>%
-                         drop_na(orig_loc_port_arch)
-                       #Need to group into seperate dataset for the aggregate function
-                       test2 <-aggregate(as.numeric(test$real_quantity), by = list(year = test$orig_yr), FUN = sum)
-                       ggplot(data = test2) + 
-                           geom_area(mapping = aes(x = year, 
-                                                   y = x, 
-                                                   fill = color
-                           )) + xlab("Year") + ylab("Textile Value") +
-                           #This + require(scales) allows the y axis to look much cleaner
-                           scale_y_continuous(labels = comma)
-                       # scale_fill_manual(values=c("#460B2F", "#FB8B24", "#9A031E", "#E36414", "#894E19", "#3E2362", "#000000"))
-                       
-                       temp <- assign3 %>%
-                           filter(orig_loc_region_arch == myLoc)
-                       temp2 <- aggregate(as.numeric(temp$real_quantity), by = list(year = temp$orig_yr), FUN = sum)
-                       ggplot(data = temp2) +
-                         geom_area(mapping = aes(x = year, 
-                                                 y = x,
-                                                 fill = "#FB8B24",
-                         )) +
-                         theme(legend.position = "none") +
-                         labs(title = "Total Quantity of All Textiles Shipped", x = "Year", y = "Textile Quantity") +
-                         scale_fill_manual(values=c("#FB8B24")) +
-                         scale_x_binned("Year") #Displays all of the year
-
-                     
                      require(scales)
                      temp <- assign3 %>%
                        filter(orig_loc_region_arch == myLoc)
