@@ -545,13 +545,16 @@ server <- function(input, output, session) {
 
     output$plot <- renderPlotly({
 
-        if(is_null(input$map_shape_click$id)) {
+        if(is_null(input$map_shape_click$id) && !is_null(input$location)) {
+          myLoc <<- input$location
+          updateSelectInput(inputId = "location", choices = unique(assign3$orig_loc_region_arch), selected = myLoc)
+          
+        } else if (is_null(input$map_shape_click$id)) {
           myLoc <<- "Batavia"
-          print("second")
           updateSelectInput(inputId = "location", choices = unique(assign3$orig_loc_region_arch), selected = myLoc)
         } else {
           if(input$map_shape_click$id != myLoc) {
-            change= TRUE
+            change = TRUE
           }
           if(input$location != myLoc ) {
             change = FALSE
