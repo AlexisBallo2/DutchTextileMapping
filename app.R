@@ -51,7 +51,13 @@ for(i in 1:length(textile.data$textile_unit)){
     if (assign3$orig_loc_region_modern[i] %in% c("Netherlands")){ 
         assign3$orig_loc_region_arch[i] <- "Dutch Republic"
     }
-    }
+}
+
+for(i in 1:length(assign3$dest_loc_region)){ 
+  if (assign3$dest_loc_region[i] %in% c("Angola")){ 
+    assign3$dest_loc_region_arch[i] <- "Angola"
+  }
+}
 
 
 
