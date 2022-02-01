@@ -373,7 +373,6 @@ reset_map <- function(output,input,location){
         return_graph <- ab %>% 
             leaflet() %>%
           addProviderTiles("CartoDB.PositronNoLabels") %>%
-           # addTiles %>%
             addPolygons(color = "black",
                         label = ~new.country,
                         layerId = ab@data$new.country,
@@ -431,10 +430,10 @@ ui <- fluidPage(
   titlePanel("Dutch Textile Trade"),
       tags$div(class = "container", 
                tags$div(class = "options",
-                        
-                        tags$div(class = "selected",
-                                 textOutput("selectedCountry")
-                                 ),
+              
+                        selectInput(inputId = "location",
+                                    label = "Choose Location!",
+                                    choices = c("None" = "", unique(assign3$orig_loc_region_arch))),
                          selectInput(inputId = "inputChoice",
                                      label = "Choose identifier!",
                                      choices = c("Textile Name", "Company (WIC/VOC)", "Origin", "Destination", "Year", "Modifiers")),
@@ -475,8 +474,7 @@ server <- function(input, output, session) {
             # Graph of textile name and the value that was sent, filled with something(quantity?)
         }
         
-        #Conditionals based on user input from the drop down menu
-      
+      #Conditionals based on user input from the drop down menu
       #if the input is a textile... graph it
       if(input$inputChoice_two %in% unique(assign3$textile_name)) {
         reset_map(output,input, input$inputChoice_two)
@@ -527,7 +525,7 @@ server <- function(input, output, session) {
                        filter(orig_loc_region_arch == input$map_shape_click$id)%>%
                        filter(company == "WIC")
                      
-                     if(nrow(dataforVOC) == 0) {
+                     if(nrow(dataforWIC) == 0) {
                        df <- data.frame(
                          label=c("No available data"),
                          x = c(1.5), y =c(1.5))
