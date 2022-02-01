@@ -21,6 +21,17 @@ textile.data<- read_xlsx("WICVOC012021.xlsx")
 
 #Takes schock and changes to pieces, takes half ps and changes to ps
 assign3<- textile.data %>% mutate(real_quantity = 0) #create real value collumn
+
+## Change Guinea to Elmina
+assign3$dest_loc_region_arch = str_replace(assign3$dest_loc_region_arch, "Guinea", "Elmina")
+
+#Ardra and Guinea // Ardra and St. Eaustatius == Ardra
+assign3$dest_loc_region_arch = str_replace(assign3$dest_loc_region_arch, "Ardra and Guinea", "Ardra")
+assign3$dest_loc_region_arch = str_replace(assign3$dest_loc_region_arch, "Ardra and St Eustatius / Guinea", "Ardra")
+
+
+
+
 for(i in 1:length(textile.data$textile_unit)){ 
     if (assign3$textile_unit[i] %in% c("schock", "Schock")){ #fix the schock unit (x4)
         assign3$real_quantity[i] <- as.numeric(textile.data$textile_quantity[i])*4
@@ -46,19 +57,73 @@ assign3$dest_loc_long <- otherdata$dest_loc_long
 
 
 
-#Accounting for odd naming convention
-for(i in 1:length(textile.data$textile_unit)){ 
+#Dutch Republic only listed as modern origin location
+for(i in 1:length(assign3$textile_unit)){ 
     if (assign3$orig_loc_region_modern[i] %in% c("Netherlands")){ 
         assign3$orig_loc_region_arch[i] <- "Dutch Republic"
     }
 }
 
+#Fill missing Dutch Republic orig region arch when origin port is Amsterdam
+for(i in 1:length(assign3$orig_loc_port_arch)){ 
+  if (assign3$orig_loc_port_arch[i] %in% c("Amsterdam")){ 
+    assign3$orig_loc_region_arch[i] <- "Dutch Republic"
+  }
+}
+
+
+#Angola only listed in modern origin location
 for(i in 1:length(assign3$dest_loc_region)){ 
   if (assign3$dest_loc_region[i] %in% c("Angola")){ 
     assign3$dest_loc_region_arch[i] <- "Angola"
   }
 }
 
+#Ardra and Elmina only listed as Destination Ports
+for(i in 1:length(assign3$dest_loc_port)){ 
+  if (assign3$dest_loc_port[i] %in% c("Elmina")){ 
+    assign3$dest_loc_region_arch[i] <- "Elmina"
+  }
+  if (assign3$dest_loc_port[i] %in% c("Ardra")){ 
+    assign3$dest_loc_region_arch[i] <- "Ardra"
+  }
+}
+
+
+#Fill Destination Region Elmina, Ardra, Angola, Arguin from historical port data
+for(i in 1:length(assign3$dest_loc_port_arch)){ 
+  if (assign3$dest_loc_port_arch[i] %in% c("Elmina")){ 
+    assign3$dest_loc_region_arch[i] <- "Elmina"
+  }
+  if (assign3$dest_loc_port_arch[i] %in% c("Ardra")){ 
+    assign3$dest_loc_region_arch[i] <- "Ardra"
+  }
+  if (assign3$dest_loc_port_arch[i] %in% c("Angola")){ 
+    assign3$dest_loc_region_arch[i] <- "Angola"
+  }
+  if (assign3$dest_loc_port_arch[i] %in% c("Arguin")){ 
+    assign3$dest_loc_region_arch[i] <- "Arguin"
+  }
+  if (assign3$dest_loc_port_arch[i] %in% c("Elmina and Ardra")){ 
+    assign3$dest_loc_region_arch[i] <- "Elmina"
+  }
+  if (assign3$dest_loc_port_arch[i] %in% c("Ardra & Suriname")){ 
+    assign3$dest_loc_region_arch[i] <- "Ardra"
+  }
+  if (assign3$dest_loc_port_arch[i] %in% c("Elmina and Angola")){ 
+    assign3$dest_loc_region_arch[i] <- "Elmina"
+  }
+}
+
+
+q<- assign3 %>%
+  filter(is.na(orig_loc_region_arch))
+
+# Change Guinea to Elmina
+
+
+
+#Ardra and Guinea // Ardra and St. Eaustatius == Ardra
 
 
 
@@ -208,7 +273,7 @@ makassar@data <- data.frame() %>%
 
 malacca@data <- data.frame() %>%
     add_column(Country = "Country") %>%
-    add_row(Country = "Malakka")
+    add_row(Country = "Mallaka")
 
 mokka@data <- data.frame() %>%
     add_column(Country = "Country") %>%
@@ -272,7 +337,7 @@ arguin@data <- data.frame() %>%
 
 ardra@data <- data.frame() %>%
     add_column(Country = "Country") %>%
-    add_row(Country = "Ardra and Guinea")
+    add_row(Country = "Ardra")
 
 #initial join
 ab <- raster::union(angola,arguin)
@@ -283,7 +348,7 @@ ab <- raster::union(ab,batavia)
 ab <- raster::union(ab,bengalE)
 ab <- raster::union(ab,capeTown)
 ab <- raster::union(ab,ceylon)
-# ab <- raster::union(ab,cGoodHope) #Also problems with this one
+#ab <- raster::union(ab,cGoodHope) #Also problems with this one
 ab <- raster::union(ab,cheribon)
 ab <- raster::union(ab,coromandel)
 ab <- raster::union(ab,dutchrep)
@@ -387,6 +452,7 @@ reset_map <- function(output,input,location){
         return_graph <- ab %>% 
             leaflet() %>%
           addProviderTiles("CartoDB.PositronNoLabels") %>%
+           # addTiles %>%
             addPolygons(color = "black",
                         label = ~new.country,
                         layerId = ab@data$new.country,
@@ -444,10 +510,11 @@ ui <- fluidPage(
   titlePanel("Dutch Textile Trade"),
       tags$div(class = "container", 
                tags$div(class = "options",
-              
+                        
                         selectInput(inputId = "location",
-                                    label = "Choose Location!",
-                                    choices = c("None" = "", unique(assign3$orig_loc_region_arch))),
+                                    label = "Choose Location",
+                                    choices = c("All" = " ", unique(assign3$orig_loc_region_arch))
+                                 ),
                          selectInput(inputId = "inputChoice",
                                      label = "Choose identifier!",
                                      choices = c("Textile Name", "Company (WIC/VOC)", "Origin", "Destination", "Year", "Modifiers")),
@@ -473,43 +540,38 @@ server <- function(input, output, session) {
     reset_map(output,input, NULL)
     
     change <<- TRUE
-    print("changing set")
     
     output$plot <- renderPlot({
       
-      if(is.null(myLoc)){
-        myLoc <<- "Batavia"
-        updateSelectInput(inputId = "location", choices = unique(assign3$orig_loc_region_arch), selected = myLoc)
-      } else {
-        
         if(is_null(input$map_shape_click$id)) {
           myLoc <<- "Batavia"
+          print("second")
           updateSelectInput(inputId = "location", choices = unique(assign3$orig_loc_region_arch), selected = myLoc)
-        }
-        
-        if(input$map_shape_click$id != myLoc) {
-          change= TRUE
-        }
-        if(input$location != myLoc ) {
-          change = FALSE
-        }
-        if(change == TRUE) {
-          myLoc <<- input$map_shape_click$id
-          updateSelectInput(inputId = "location", choices = unique(assign3$orig_loc_region_arch), selected = myLoc)
+        } else {
+          if(input$map_shape_click$id != myLoc) {
+            change= TRUE
+          }
+          if(input$location != myLoc ) {
+            change = FALSE
+          }
+          if(change == TRUE) {
+            myLoc <<- input$map_shape_click$id
+            updateSelectInput(inputId = "location", choices = unique(assign3$orig_loc_region_arch), selected = myLoc)
+            
+          } 
+          if(change == FALSE) {
+            myLoc <<- input$location
+          }
           
-        } 
-        if(change == FALSE) {
-          myLoc <<- input$location
         }
         
-      }
 
-    #  updateSelectInput(inputId = "location", choices = unique(assign3$orig_loc_region_arch), selected = myLoc)
-      # myLoc <<- input$location
-  
+      #}
       print(paste("selected" , myLoc))
       
       #Conditionals based on user input from the drop down menu
+
+      
       #if the input is a textile... graph it
       if(input$inputChoice_two %in% unique(assign3$textile_name)) {
         reset_map(output,input, input$inputChoice_two)
@@ -521,6 +583,7 @@ server <- function(input, output, session) {
                        fill = "#FB8B24") +
               theme_bw() +
               labs(title = paste("The quantity of", input$inputChoice_two, "from", myLoc, "exported by year"), x ="Year", y = "Total Quantity")
+
         } else {
           switch(input$inputChoice_two,
                    "All" = {
@@ -541,7 +604,7 @@ server <- function(input, output, session) {
                    },
 
                    "Both" ={
-                       #Change the graph back to normal
+                      s #Change the graph back to normal
                        reset_map(output,input, NULL)
                        
                        assign3 %>%
@@ -560,7 +623,7 @@ server <- function(input, output, session) {
                        filter(orig_loc_region_arch == myLoc)%>%
                        filter(company == "WIC")
                      
-                     if(nrow(dataforWIC) == 0) {
+                     if(nrow(dataforVOC) == 0) {
                        df <- data.frame(
                          label=c("No available data"),
                          x = c(1.5), y =c(1.5))
@@ -668,11 +731,15 @@ server <- function(input, output, session) {
                    
                    "Year" = {
                        reset_map(output,input, NULL)
+                     
+                     output$plot <- renderPlot({
                        require(scales)
                        test <- textile.data %>%
                            filter(orig_loc_region_arch == myLoc)
+                       test <- assign3 %>%
+                         drop_na(orig_loc_port_arch)
                        #Need to group into seperate dataset for the aggregate function
-                       test2 <-aggregate(test$total_value_guldens, by = list(year = test$orig_yr, color = test$textile_color_arch), FUN = sum)
+                       test2 <-aggregate(as.numeric(test$textile_quantity), by = list(year = test$orig_yr), FUN = sum)
                        ggplot(data = test2) + 
                            geom_area(mapping = aes(x = year, 
                                                    y = x, 
@@ -689,21 +756,29 @@ server <- function(input, output, session) {
                            geom_area(mapping = aes(x = year, 
                                                    y = x
                            ))+ xlab("Year") + ylab("Textile Value")
-                       
+                         geom_area(mapping = aes(x = year, 
+                                                 y = x,
+                                                 fill = "#FB8B24",
+                         )) +
+                         theme(legend.position = "none") +
+                         labs(title = "Total Quantity of All Textiles Shipped", x = "Year", y = "Textile Quantity") +
+                         scale_fill_manual(values=c("#FB8B24")) +
+                         scale_x_binned("Year") #Displays all of the year
+                     })
                    },
+                  "Modifiers" = {
+                   reset_map(output,input, NULL)
                    
-                   
-                   
-                   "Modifiers" = {
-                      reset_map(output,input, NULL)
-                   textile.data %>%
-                       filter(orig_loc_region_arch == myLoc)%>%
-                       ggplot() + 
-                       geom_col(aes(x = dest_yr, y = as.numeric(textile_quantity)),
-                                fill = "blue") +
-                       theme_bw() +
-                       labs(x = input$inputChoice)
-                   })
+                   #HISTOGRAM FOR COLOR DISTRIBUTION
+                   assign3 %>%
+                     filter(textile_color_arch == "black") %>%
+                     ggplot()+
+                     geom_histogram(mapping = aes(x = as.numeric(textile_quantity)),
+                                    bins = 30,
+                                    color = "black",
+                                    fill = "black") +
+                     labs(title = paste("Distribution of shipment sizes based on", "Textile Color"), x = "Textile quantity (singular shipment)")
+                 })
         }
     })
     

@@ -3,7 +3,7 @@
     "path": "~/Downloads/drive-download-20220131T194100Z-001/finalProject/app.R",
     "project_path": "app.R",
     "type": "r_source",
-    "hash": "3872263231",
+    "hash": "0",
     "contents": "",
     "dirty": false,
     "created": 1643725728883.0,
@@ -12,15 +12,15 @@
     "properties": {
         "source_window_id": "",
         "Source": "Source",
-        "cursorPosition": "502,9",
-        "scrollLine": "487"
+        "cursorPosition": "552,11",
+        "scrollLine": "543"
     },
     "folds": "",
-    "lastKnownWriteTime": 1643735589,
+    "lastKnownWriteTime": 1643738397,
     "encoding": "UTF-8",
     "collab_server": "",
     "source_window": "",
-    "last_content_update": 1643735589430,
+    "last_content_update": 1643738397751,
     "read_only": false,
     "read_only_alternatives": []
 }
