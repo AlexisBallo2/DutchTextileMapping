@@ -764,7 +764,7 @@ server <- function(input, output, session) {
                    "Year" = {
                        reset_map(output,input, NULL)
                      
-                     output$plot <- renderPlot({
+                  
                        require(scales)
                        test <- assign3 %>%
                            filter(orig_loc_region_arch == myLoc)
@@ -785,9 +785,6 @@ server <- function(input, output, session) {
                            filter(orig_loc_region_arch == myLoc)
                        temp2 <- aggregate(as.numeric(temp$real_quantity), by = list(year = temp$orig_yr), FUN = sum)
                        ggplot(data = temp2) +
-                           geom_area(mapping = aes(x = year, 
-                                                   y = x
-                           ))+ xlab("Year") + ylab("Textile Value")
                          geom_area(mapping = aes(x = year, 
                                                  y = x,
                                                  fill = "#FB8B24",
@@ -796,7 +793,7 @@ server <- function(input, output, session) {
                          labs(title = "Total Quantity of All Textiles Shipped", x = "Year", y = "Textile Quantity") +
                          scale_fill_manual(values=c("#FB8B24")) +
                          scale_x_binned("Year") #Displays all of the year
-                     })
+                     
                    },
                   "Modifiers" = {
                    reset_map(output,input, NULL)
