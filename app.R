@@ -14,7 +14,7 @@ library(plotly)
 options(scipen = 100000)
 
 
-#setwd("/Users/lukelorenz/Desktop/Middlebury College/Junior/DataScienceDisciplines/DataScience/Assignments/geojson")
+#setwd("/Users/alecgironda/Desktop/Data Science/final_final_proj")
 
 #GETTING/MERGING SHIP DATA + ADDING CONVERSION
 
@@ -762,8 +762,10 @@ server <- function(input, output, session) {
                    
                    
                    "Year" = {
-                       reset_map(output,input, NULL)
+                       
+                     reset_map(output,input, NULL)
                      
+
                   
                        require(scales)
                        test <- assign3 %>%
@@ -793,7 +795,33 @@ server <- function(input, output, session) {
                          labs(title = "Total Quantity of All Textiles Shipped", x = "Year", y = "Textile Quantity") +
                          scale_fill_manual(values=c("#FB8B24")) +
                          scale_x_binned("Year") #Displays all of the year
+
                      
+                     require(scales)
+                     temp <- assign3 %>%
+                       filter(orig_loc_region_arch == myLoc)
+                       
+                     if(nrow(temp) == 0) {
+                       df <- data.frame(
+                         label=c("No available data"),
+                         x = c(1.5), y =c(1.5))
+                       ggplot(df, aes(x=x, y=y, label=label)) + 
+                         geom_text(mapping = aes(x = x, y = y), size = 10)+
+                         labs(x= "",y="")
+                         
+                     } else {
+                       temp2 <- aggregate(as.numeric(temp$real_quantity), by = list(year = temp$orig_yr), FUN = sum,na.rm=TRUE)
+
+                     
+                     ggplot(data = temp2) +
+                       geom_col(mapping = aes(x = as.factor(year), 
+                                               y = x,
+                                               fill = "#FB8B24",
+                       )) +
+                       theme(legend.position = "none") +
+                       labs(title = "Total Quantity of All Textiles Shipped", x = "Year", y = "Textile Quantity") +
+                       scale_fill_manual(values=c("#FB8B24"))
+                     }
                    },
                   "Modifiers" = {
                    reset_map(output,input, NULL)
