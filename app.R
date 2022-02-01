@@ -21,7 +21,34 @@ options(scipen = 100000)
 textile.data<- read_xlsx("WICVOC012021.xlsx")
 
 #Takes schock and changes to pieces, takes half ps and changes to ps
-assign3<- textile.data %>% mutate(real_quantity = 0) #create real value collumn
+assign3<- textile.data %>% mutate(real_quantity = 0, real_guldens = 0) #create real value collumn
+
+for(i in 1:length(textile.data$textile_unit)){ 
+  if (textile.data$textile_unit[i] %in% c("schock", "Schock", "schok")){ #fix the schock unit (x4)
+    assign3$real_quantity[i] <- as.numeric(textile.data$textile_quantity[i])*4 
+  }
+  else if(textile.data$textile_unit[i] == "half ps."){ #fix the half ps. unit (/2)
+    assign3$real_quantity[i] <- as.numeric(textile.data$textile_quantity[i])/2
+  }
+  else  if(textile.data$textile_unit[i] == "el"){
+    assign3$real_quantity[i] <- as.numeric(textile.data$textile_quantity[i])*as.numeric(assign3$els_per_ps[i], na.rm = TRUE)
+  }
+  else{
+    assign3$real_quantity[i] <- as.numeric(textile.data$textile_quantity[i]) #for now ignore rolls, els, and lbs- filter these units out in analysis
+  }
+}
+
+##Modify Indian Guidlers to Guilders
+for(i in 1:length(assign3$shipment_currency)){ 
+  if (assign3$shipment_currency[i] %in% c("Indian Guilders")){
+    assign3$real_guldens[i] <- as.numeric(assign3$total_value_guldens[i])*(10.5/15)
+  }
+  else{
+    assign3$real_guldens[i] <- as.numeric(assign3$total_value_guldens[i])
+  }
+}
+
+#10.5 Dutch guilders = 15 Indian guilders
 
 ## Change Guinea to Elmina
 assign3$dest_loc_region_arch = str_replace(assign3$dest_loc_region_arch, "Guinea", "Elmina")
@@ -33,20 +60,7 @@ assign3$dest_loc_region_arch = str_replace(assign3$dest_loc_region_arch, "Ardra 
 
 
 
-for(i in 1:length(textile.data$textile_unit)){ 
-    if (assign3$textile_unit[i] %in% c("schock", "Schock")){ #fix the schock unit (x4)
-        assign3$real_quantity[i] <- as.numeric(textile.data$textile_quantity[i])*4
-    }
-    else if(assign3$textile_unit[i] == "half ps."){ #fix the half ps. unit (/2)
-        assign3$real_quantity[i] <- as.numeric(textile.data$textile_quantity[i])/2
-    }
-    else  if(assign3$textile_unit[i] == "el"){
-        assign3$real_quantity[i] <- as.numeric(textile.data$textile_quantity[i])*as.numeric(textile.data$els_per_ps[i], na.rm = TRUE)
-    }
-    else{
-        assign3$real_quantity[i] <- as.numeric(textile.data$textile_quantity[i]) #for now ignore rolls, els, and lbs- filter these units out in analysis
-    }
-}
+
 
 #adding the locations!!
 
@@ -129,7 +143,7 @@ q<- assign3 %>%
 
 
 assign3 <- assign3 %>%
-    mutate(piece_rate = as.numeric(total_value_guldens)/as.numeric(real_quantity))
+    mutate(piece_rate = as.numeric(real_guldens)/as.numeric(real_quantity))
 
 
 slavetrade.data <- read.csv("SlaveTrade.csv")
@@ -138,18 +152,18 @@ slavetrade.data <- read.csv("SlaveTrade.csv")
 mutated.slavetrade.data <- slavetrade.data %>%
     mutate(new_yr = as.numeric(substr(slavetrade.data$`Date.that.voyage.began`, 1,4))) #Takes substring gets the year
 
-joined.ship.data <- textile.data %>%
+joined.ship.data <- assign3 %>%
     inner_join(mutated.slavetrade.data, by = c("means_of_exchange" = "Vessel.name",
                                                "orig_yr" = "new_yr"))
 
 #GETS THE EXCHANGE RATE FOR COLOR OF TEXTILE TO NUMBER OF SLAVES
 joined.ship.data$total_value_stuivers[is.na(joined.ship.data$total_value_stuivers)] <- 0
 joined.ship.data$total_value_penningen[is.na(joined.ship.data$total_value_penningen)] <- 0
-joined.ship.data$total_value_stuivers[is.na(joined.ship.data$total_value_guldens)] <- 0
+joined.ship.data$total_value_stuivers[is.na(joined.ship.data$real_guldens)] <- 0
 
 #converting vals
 converted.joined.ship.data <- joined.ship.data %>% deb_gather_lsd(gsp_col,
-                                                                  l = total_value_guldens,
+                                                                  l = real_guldens,
                                                                   s = total_value_stuivers,
                                                                   d = total_value_penningen,
                                                                   bases = c(16,20))
@@ -161,7 +175,7 @@ final.data <- temp.data %>%
     mutate(textile_total = deb_as_decimal(gsp_col)) %>%
     mutate(pct = textile_total/val) %>%
     mutate(text_is_worth_slaves = floor(pct*Total.embarked)) %>%
-    mutate(exchange_rate = as.numeric(textile_quantity)/text_is_worth_slaves) #gets ____ pieces of ___ per slave
+    mutate(exchange_rate = as.numeric(real_quantity)/text_is_worth_slaves) #gets ____ pieces of ___ per slave
 
 
 
@@ -384,7 +398,7 @@ ab@data <- ab@data %>%
 #For coloring the map if the user selects origin
 export_val <- assign3 %>%
     group_by(orig_loc_region_arch)%>%
-    summarise(region.value = sum(total_value_guldens, na.rm  = TRUE))
+    summarise(region.value = sum(real_guldens, na.rm  = TRUE))
 ab.origin <- ab
 ab.origin@data<- ab@data %>% 
     left_join(export_val, by = c("new.country" = "orig_loc_region_arch"), na.omit = TRUE)
@@ -395,7 +409,7 @@ color <- colorNumeric(palette = "RdYlBu",
 #If user selects destination
 import_val <- assign3 %>%
     group_by(dest_loc_region_arch)%>%
-    summarise(region.value2 = sum(total_value_guldens, na.rm  = TRUE))
+    summarise(region.value2 = sum(real_guldens, na.rm  = TRUE))
 ab.dest <- ab.origin
 ab.dest@data<- ab.origin@data %>% 
     left_join(import_val, by = c("new.country" = "dest_loc_region_arch"), na.omit = TRUE)
@@ -594,7 +608,7 @@ server <- function(input, output, session) {
           filter(orig_loc_region_arch == myLoc)%>%
            filter(textile_name == input$inputChoice_two ) %>%
               ggplot() +
-              geom_col(aes(x = dest_yr, y = as.numeric(textile_quantity)),
+              geom_col(aes(x = dest_yr, y = as.numeric(real_quantity)),
                        fill = "#FB8B24") +
               theme_bw() +
               labs(title = paste("The quantity of", input$inputChoice_two, "from", myLoc, "exported by year"), x ="Year", y = "Total Quantity")
@@ -628,7 +642,7 @@ server <- function(input, output, session) {
                        assign3 %>%
                            filter(orig_loc_region_arch == myLoc)%>%
                            ggplot() + 
-                           geom_col(aes(x = dest_yr, y = as.numeric(textile_quantity)),
+                           geom_col(aes(x = dest_yr, y = as.numeric(real_quantity)),
                                     fill = "#FB8B24") +
                            theme_bw() +
                           labs(title = paste("Quanity of Textiles Shipped out of",myLoc ,"by Both VOC/WIC"), x ="Year", y = "Total Quantity")
@@ -649,7 +663,7 @@ server <- function(input, output, session) {
                      } else {
                        dataforWIC %>%
                          ggplot() + 
-                         geom_col(aes(x = dest_yr, y = as.numeric(textile_quantity)),
+                         geom_col(aes(x = dest_yr, y = as.numeric(real_quantity)),
                                   fill = "#FB8B24") +
                          theme_bw() +
                          labs(title = paste("Quanity of Textiles Shipped out of",myLoc ,"by the", input$inputChoice_two, "Company"), x ="Year", y = "Total Quantity")
@@ -677,7 +691,7 @@ server <- function(input, output, session) {
                      } else {
                        dataforVOC %>%
                             ggplot() + 
-                             geom_col(aes(x = dest_yr, y = as.numeric(textile_quantity)),
+                             geom_col(aes(x = dest_yr, y = as.numeric(real_quantity)),
                                       fill = "#FB8B24") +
                              theme_bw() +
                             labs(title = paste("Quanity of Textiles Shipped out of",myLoc ,"by the", input$inputChoice_two, "Company"), x ="Year", y = "Total Quantity")
@@ -736,7 +750,7 @@ server <- function(input, output, session) {
                                            weight = 1,
                                            stroke = 1) %>%
                                setView(55.25,0, 3) %>% #Sets view to center
-                               addLegend("topright", pal = color, values = ~region.value,
+                               addLegend("topright", pal = color, values = ~region.value2,
                                          title = "Total Value (Guldens) Imported",
                                          na.label = "No Imports",
                                          labFormat = labelFormat(suffix = "g"),
@@ -752,12 +766,12 @@ server <- function(input, output, session) {
                      
                      output$plot <- renderPlot({
                        require(scales)
-                       test <- textile.data %>%
+                       test <- assign3 %>%
                            filter(orig_loc_region_arch == myLoc)
                        test <- assign3 %>%
                          drop_na(orig_loc_port_arch)
                        #Need to group into seperate dataset for the aggregate function
-                       test2 <-aggregate(as.numeric(test$textile_quantity), by = list(year = test$orig_yr), FUN = sum)
+                       test2 <-aggregate(as.numeric(test$real_quantity), by = list(year = test$orig_yr), FUN = sum)
                        ggplot(data = test2) + 
                            geom_area(mapping = aes(x = year, 
                                                    y = x, 
@@ -767,9 +781,9 @@ server <- function(input, output, session) {
                            scale_y_continuous(labels = comma)
                        # scale_fill_manual(values=c("#460B2F", "#FB8B24", "#9A031E", "#E36414", "#894E19", "#3E2362", "#000000"))
                        
-                       temp <- textile.data %>%
+                       temp <- assign3 %>%
                            filter(orig_loc_region_arch == myLoc)
-                       temp2 <- aggregate(as.numeric(temp$textile_quantity), by = list(year = temp$orig_yr), FUN = sum)
+                       temp2 <- aggregate(as.numeric(temp$real_quantity), by = list(year = temp$orig_yr), FUN = sum)
                        ggplot(data = temp2) +
                            geom_area(mapping = aes(x = year, 
                                                    y = x
@@ -791,7 +805,7 @@ server <- function(input, output, session) {
                    assign3 %>%
                      filter(textile_color_arch == "black") %>%
                      ggplot()+
-                     geom_histogram(mapping = aes(x = as.numeric(textile_quantity)),
+                     geom_histogram(mapping = aes(x = as.numeric(real_quantity)),
                                     bins = 30,
                                     color = "black",
                                     fill = "black") +
