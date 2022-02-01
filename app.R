@@ -604,6 +604,24 @@ server <- function(input, output, session) {
                                          opacity = 1)
                            
                        })
+                       
+                       output$plot <- renderPlot({
+                         require(scales)
+                         test <- assign3 %>%
+                           drop_na(orig_loc_port_arch)
+                         #Need to group into seperate dataset for the aggregate function
+                         test2 <-aggregate(as.numeric(test$textile_quantity), by = list(year = test$orig_yr), FUN = sum)
+                         ggplot(data = test2) + 
+                           geom_area(mapping = aes(x = year, 
+                                                   y = x,
+                                                   fill = "#FB8B24",
+                           )) +
+                           theme(legend.position = "none") +
+                           labs(title = "Total Quantity of All Textiles Shipped", x = "Year", y = "Textile Quantity") +
+                           scale_fill_manual(values=c("#FB8B24")) +
+                           scale_x_binned("Year") #Displays all of the year
+                       })
+                       
                    }
                    ,
                    
