@@ -9,6 +9,7 @@ library(sp)
 library(rnaturalearth)
 library(WDI)
 library(tigris)
+library(plotly)
 
 options(scipen = 100000)
 
@@ -527,8 +528,9 @@ ui <- fluidPage(
                ),
         ),
       
-        plotOutput(outputId = "plot"),
-        leafletOutput(outputId = "dropdown")
+        plotlyOutput(outputId = "plot"),
+        leafletOutput(outputId = "dropdown"),
+        verbatimTextOutput("selection")
 )
 
 server <- function(input, output, session) {
@@ -541,8 +543,9 @@ server <- function(input, output, session) {
     
     change <<- TRUE
     
-    output$plot <- renderPlot({
-      
+#<<<<<<< HEAD
+    output$plot <- renderPlotly({
+
         if(is_null(input$map_shape_click$id)) {
           myLoc <<- "Batavia"
           print("second")
@@ -557,16 +560,13 @@ server <- function(input, output, session) {
           if(change == TRUE) {
             myLoc <<- input$map_shape_click$id
             updateSelectInput(inputId = "location", choices = unique(assign3$orig_loc_region_arch), selected = myLoc)
-            
-          } 
+
+          }
           if(change == FALSE) {
             myLoc <<- input$location
           }
-          
         }
-        
-
-      #}
+      
       print(paste("selected" , myLoc))
       
       #Conditionals based on user input from the drop down menu
@@ -590,7 +590,7 @@ server <- function(input, output, session) {
                        #Change graph back to normal
                        reset_map(output,input, NULL)
                        
-                       assign3 %>% 
+                   g<- assign3 %>% 
                            group_by(orig_loc_port_arch, textile_name) %>% 
                            filter(piece_rate < 20) %>% #For now, filtering by cheap pieces
                            filter(orig_loc_region_arch == myLoc) %>%
@@ -601,6 +601,9 @@ server <- function(input, output, session) {
                            guides(fill=guide_legend(title="Mean Value per Piece")) +
                            scale_fill_gradient(low = "#460B2F", high = "#E36414", na.value = NA)
 
+                   ggplotly(g)
+                   
+                   
                    },
 
                    "Both" ={
