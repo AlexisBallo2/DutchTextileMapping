@@ -9,6 +9,7 @@ library(sp)
 library(rnaturalearth)
 library(WDI)
 library(tigris)
+library(plotly)
 
 options(scipen = 100000)
 
@@ -518,8 +519,9 @@ ui <- fluidPage(
                ),
         ),
       
-        plotOutput(outputId = "plot"),
-        leafletOutput(outputId = "dropdown")
+        plotlyOutput(outputId = "plot"),
+        leafletOutput(outputId = "dropdown"),
+        verbatimTextOutput("selection")
 )
 
 server <- function(input, output, session) {
@@ -539,7 +541,7 @@ server <- function(input, output, session) {
     reset_map(output,input, NULL)
     
     
-    output$plot <- renderPlot({
+    output$plot <- renderPlotly({
         
         if(is.null(input$map_shape_click$id)){
             return()
@@ -566,7 +568,7 @@ server <- function(input, output, session) {
                        #Change graph back to normal
                        reset_map(output,input, NULL)
                        
-                       assign3 %>% 
+                   g<- assign3 %>% 
                            group_by(orig_loc_port_arch, textile_name) %>% 
                            filter(piece_rate < 20) %>% #For now, filtering by cheap pieces
                            filter(orig_loc_region_arch == input$map_shape_click$id) %>%
@@ -577,6 +579,9 @@ server <- function(input, output, session) {
                            guides(fill=guide_legend(title="Mean Value per Piece")) +
                            scale_fill_gradient(low = "#460B2F", high = "#E36414", na.value = NA)
 
+                   ggplotly(g)
+                   
+                   
                    },
 
                    "Both" ={
