@@ -9,6 +9,7 @@ library(sp)
 library(rnaturalearth)
 library(WDI)
 library(tigris)
+library(plotly)
 
 options(scipen = 100000)
 
@@ -403,17 +404,18 @@ color2 <- colorNumeric(palette = "RdYlBu",
                       domain = ab.dest@data$region.value2)
 
 
+#myLoc = ""
 
 #Avoid tedious rewrites
 switch_func <- function(input,session){
     switch(input$inputChoice,
            "Textile Name" = {
              #this allows me to filter the data and only select textiles that are exported
-             if(is_null(input$map_shape_click$id)) {
+             if(is_null(myLoc)) {
                return()
              } else {
                text_choices <- assign3 %>%
-                 filter(orig_loc_region_arch == input$map_shape_click$id)
+                 filter(orig_loc_region_arch == myLoc)
                updateSelectInput(session = session, inputId = "inputChoice_two", choices = c("All", unique(text_choices$textile_name)))
                
              }
@@ -434,12 +436,19 @@ switch_func <- function(input,session){
     )
 }
 
-#Resets the map
+
+
+
+#Resets the ma
 reset_map <- function(output,input,location){
-    
+  
     output$map <- renderLeaflet({
       
-      print(paste(input$map_shape_click$id, "resetting map..."))
+      
+      #updateSelectInput(inputId = "location", choices = unique(assign3$orig_loc_region_arch), selected = myLoc)
+      
+  
+      print(paste(myLoc, "resetting map..."))
         
         return_graph <- ab %>% 
             leaflet() %>%
@@ -453,9 +462,9 @@ reset_map <- function(output,input,location){
                         stroke = 1) %>%
             setView(65.25,10, 2)
         if(!is_null(location)) {
-          print(paste(input$map_shape_click$id,input$inputChoice_two))
+          print(paste(myLoc,input$inputChoice_two))
           mayb <- assign3 %>%
-            filter(orig_loc_region_arch == input$map_shape_click$id & textile_name == input$inputChoice_two)
+            filter(orig_loc_region_arch == myLoc & textile_name == input$inputChoice_two)
           
           maybe <- mayb[ , c("orig_loc_region_arch", "orig_loc_lat", "orig_loc_long", "dest_loc_port","dest_loc_lat", "dest_loc_long", "dest_loc_region_arch")]
           
@@ -482,7 +491,7 @@ reset_map <- function(output,input,location){
             return_graph <-  addPolylines(return_graph,
                                    lat = as.numeric(maybe[i, c(2, 5)]),
                                    lng = as.numeric(maybe[i, c(3, 6)]),
-                                   label = paste(input$map_shape_click$id, maybe$orig_loc_region_arch),
+                                   label = paste(myLoc, maybe$orig_loc_region_arch),
                                    weight = 1,
                                    color = "purple")
             }
@@ -503,8 +512,9 @@ ui <- fluidPage(
       tags$div(class = "container", 
                tags$div(class = "options",
                         
-                        tags$div(class = "selected",
-                                 textOutput("selectedCountry")
+                        selectInput(inputId = "location",
+                                    label = "Choose Location",
+                                    choices = c("All" = " ", unique(assign3$orig_loc_region_arch))
                                  ),
                          selectInput(inputId = "inputChoice",
                                      label = "Choose identifier!",
@@ -518,84 +528,102 @@ ui <- fluidPage(
                ),
         ),
       
-        plotOutput(outputId = "plot"),
-        leafletOutput(outputId = "dropdown")
+        plotlyOutput(outputId = "plot"),
+        leafletOutput(outputId = "dropdown"),
+        verbatimTextOutput("selection")
 )
 
 server <- function(input, output, session) {
     
-    output$selectedCountry <- renderText({
-      if(is_null(input$map_shape_click$id)) {
-        "Please Select a Location"
-      } else {
-        input$map_shape_click$id
-      }
-    })
-     
+    myLoc <<- " "
     output$dropdown <- renderLeaflet({
         switch_func(input,session)
     })
-    
     reset_map(output,input, NULL)
     
+    change <<- TRUE
     
-    output$plot <- renderPlot({
-        
-        if(is.null(input$map_shape_click$id)){
-            return()
-            # Graph of textile name and the value that was sent, filled with something(quantity?)
+#<<<<<<< HEAD
+    output$plot <- renderPlotly({
+
+        if(is_null(input$map_shape_click$id)) {
+          myLoc <<- "Batavia"
+          print("second")
+          updateSelectInput(inputId = "location", choices = unique(assign3$orig_loc_region_arch), selected = myLoc)
+        } else {
+          if(input$map_shape_click$id != myLoc) {
+            change= TRUE
+          }
+          if(input$location != myLoc ) {
+            change = FALSE
+          }
+          if(change == TRUE) {
+            myLoc <<- input$map_shape_click$id
+            updateSelectInput(inputId = "location", choices = unique(assign3$orig_loc_region_arch), selected = myLoc)
+
+          }
+          if(change == FALSE) {
+            myLoc <<- input$location
+          }
         }
-        
-        #Conditionals based on user input from the drop down menu
+      
+      print(paste("selected" , myLoc))
+      
+      #Conditionals based on user input from the drop down menu
+
       
       #if the input is a textile... graph it
       if(input$inputChoice_two %in% unique(assign3$textile_name)) {
         reset_map(output,input, input$inputChoice_two)
         assign3 %>%
-          filter(orig_loc_region_arch == input$map_shape_click$id)%>%
+          filter(orig_loc_region_arch == myLoc)%>%
            filter(textile_name == input$inputChoice_two ) %>%
               ggplot() +
               geom_col(aes(x = dest_yr, y = as.numeric(textile_quantity)),
                        fill = "#FB8B24") +
               theme_bw() +
-              labs(title = input$inputChoice_two, x ="Year", y = "Total Quantity")
+              labs(title = paste("The quantity of", input$inputChoice_two, "from", myLoc, "exported by year"), x ="Year", y = "Total Quantity")
+
         } else {
           switch(input$inputChoice_two,
                    "All" = {
                        #Change graph back to normal
                        reset_map(output,input, NULL)
                        
-                       assign3 %>% 
+                   g<- assign3 %>% 
                            group_by(orig_loc_port_arch, textile_name) %>% 
                            filter(piece_rate < 20) %>% #For now, filtering by cheap pieces
-                           filter(orig_loc_region_arch == input$map_shape_click$id) %>%
+                           filter(orig_loc_region_arch == myLoc) %>%
                            summarise(mean_value = mean(piece_rate))%>%
                            ggplot()+
                            geom_tile(aes(x = orig_loc_port_arch, y= textile_name, fill = mean_value))+
-                           labs(x = "Origin Port", y = "Textile") + 
+                           labs(title = paste("A chart of all exports from", myLoc, "ports") ,x = "Origin Port", y = "Textile") + 
                            guides(fill=guide_legend(title="Mean Value per Piece")) +
                            scale_fill_gradient(low = "#460B2F", high = "#E36414", na.value = NA)
 
+                   ggplotly(g)
+                   
+                   
                    },
 
                    "Both" ={
-                       #Change the graph back to normal
+                      s #Change the graph back to normal
                        reset_map(output,input, NULL)
                        
                        assign3 %>%
-                           filter(orig_loc_region_arch == input$map_shape_click$id)%>%
+                           filter(orig_loc_region_arch == myLoc)%>%
                            ggplot() + 
                            geom_col(aes(x = dest_yr, y = as.numeric(textile_quantity)),
                                     fill = "#FB8B24") +
                            theme_bw() +
-                           labs(title = input$inputChoice_two, x ="Year", y = "Total Quantity")
+                          labs(title = paste("Quanity of Textiles Shipped out of",myLoc ,"by Both VOC/WIC"), x ="Year", y = "Total Quantity")
                    },
                    
                    "WIC" = {
                       reset_map(output,input, NULL)
                       
                      dataforWIC <- assign3 %>%
-                       filter(orig_loc_region_arch == input$map_shape_click$id)%>%
+                       filter(orig_loc_region_arch == myLoc)%>%
                        filter(company == "WIC")
                      
                      if(nrow(dataforVOC) == 0) {
@@ -609,7 +637,7 @@ server <- function(input, output, session) {
                          geom_col(aes(x = dest_yr, y = as.numeric(textile_quantity)),
                                   fill = "#FB8B24") +
                          theme_bw() +
-                         labs(title = input$inputChoice_two, x ="Year", y = "Total Quantity")
+                         labs(title = paste("Quanity of Textiles Shipped out of",myLoc ,"by the", input$inputChoice_two, "Company"), x ="Year", y = "Total Quantity")
                        
                      }
                        
@@ -622,7 +650,7 @@ server <- function(input, output, session) {
                      reset_map(output,input, NULL)
                      
                      dataforVOC <- assign3 %>%
-                       filter(orig_loc_region_arch == input$map_shape_click$id)%>%
+                       filter(orig_loc_region_arch == myLoc)%>%
                        filter(company == "VOC") 
                      
   
@@ -637,7 +665,7 @@ server <- function(input, output, session) {
                              geom_col(aes(x = dest_yr, y = as.numeric(textile_quantity)),
                                       fill = "#FB8B24") +
                              theme_bw() +
-                             labs(title = input$inputChoice_two, x ="Year", y = "Total Quantity")
+                            labs(title = paste("Quanity of Textiles Shipped out of",myLoc ,"by the", input$inputChoice_two, "Company"), x ="Year", y = "Total Quantity")
                      }  
                    },
                    
@@ -645,7 +673,7 @@ server <- function(input, output, session) {
                    "Origin" = {
                        output$map <- renderLeaflet({
                            
-                           print(paste(input$map_shape_click$id, "origin map"))
+                           print(paste(myLoc, "origin map"))
                            
                            switch_func(input,session)
                            
@@ -676,7 +704,7 @@ server <- function(input, output, session) {
                    "Destination" = {
                        output$map <- renderLeaflet({
                            
-                           print(paste(input$map_shape_click$id, "destination"))
+                           print(paste(myLoc, "destination"))
                            
                            switch_func(input,session)
                            
@@ -706,11 +734,15 @@ server <- function(input, output, session) {
                    
                    "Year" = {
                        reset_map(output,input, NULL)
+                     
+                     output$plot <- renderPlot({
                        require(scales)
                        test <- textile.data %>%
-                           filter(orig_loc_region_arch == input$map_shape_click$id)
+                           filter(orig_loc_region_arch == myLoc)
+                       test <- assign3 %>%
+                         drop_na(orig_loc_port_arch)
                        #Need to group into seperate dataset for the aggregate function
-                       test2 <-aggregate(test$total_value_guldens, by = list(year = test$orig_yr, color = test$textile_color_arch), FUN = sum)
+                       test2 <-aggregate(as.numeric(test$textile_quantity), by = list(year = test$orig_yr), FUN = sum)
                        ggplot(data = test2) + 
                            geom_area(mapping = aes(x = year, 
                                                    y = x, 
@@ -721,27 +753,35 @@ server <- function(input, output, session) {
                        # scale_fill_manual(values=c("#460B2F", "#FB8B24", "#9A031E", "#E36414", "#894E19", "#3E2362", "#000000"))
                        
                        temp <- textile.data %>%
-                           filter(orig_loc_region_arch == input$map_shape_click$id)
+                           filter(orig_loc_region_arch == myLoc)
                        temp2 <- aggregate(as.numeric(temp$textile_quantity), by = list(year = temp$orig_yr), FUN = sum)
                        ggplot(data = temp2) +
                            geom_area(mapping = aes(x = year, 
                                                    y = x
                            ))+ xlab("Year") + ylab("Textile Value")
-                       
+                         geom_area(mapping = aes(x = year, 
+                                                 y = x,
+                                                 fill = "#FB8B24",
+                         )) +
+                         theme(legend.position = "none") +
+                         labs(title = "Total Quantity of All Textiles Shipped", x = "Year", y = "Textile Quantity") +
+                         scale_fill_manual(values=c("#FB8B24")) +
+                         scale_x_binned("Year") #Displays all of the year
+                     })
                    },
+                  "Modifiers" = {
+                   reset_map(output,input, NULL)
                    
-                   
-                   
-                   "Modifiers" = {
-                      reset_map(output,input, NULL)
-                   textile.data %>%
-                       filter(orig_loc_region_arch == input$map_shape_click$id)%>%
-                       ggplot() + 
-                       geom_col(aes(x = dest_yr, y = as.numeric(textile_quantity)),
-                                fill = "blue") +
-                       theme_bw() +
-                       labs(x = input$inputChoice)
-                   })
+                   #HISTOGRAM FOR COLOR DISTRIBUTION
+                   assign3 %>%
+                     filter(textile_color_arch == "black") %>%
+                     ggplot()+
+                     geom_histogram(mapping = aes(x = as.numeric(textile_quantity)),
+                                    bins = 30,
+                                    color = "black",
+                                    fill = "black") +
+                     labs(title = paste("Distribution of shipment sizes based on", "Textile Color"), x = "Textile quantity (singular shipment)")
+                 })
         }
     })
     
