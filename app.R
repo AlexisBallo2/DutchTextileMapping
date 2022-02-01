@@ -58,11 +58,19 @@ assign3$dest_loc_long <- otherdata$dest_loc_long
 
 
 #Dutch Republic only listed as modern origin location
-for(i in 1:length(textile.data$textile_unit)){ 
+for(i in 1:length(assign3$textile_unit)){ 
     if (assign3$orig_loc_region_modern[i] %in% c("Netherlands")){ 
         assign3$orig_loc_region_arch[i] <- "Dutch Republic"
     }
 }
+
+#Fill missing Dutch Republic orig region arch when origin port is Amsterdam
+for(i in 1:length(assign3$orig_loc_port_arch)){ 
+  if (assign3$orig_loc_port_arch[i] %in% c("Amsterdam")){ 
+    assign3$orig_loc_region_arch[i] <- "Dutch Republic"
+  }
+}
+
 
 #Angola only listed in modern origin location
 for(i in 1:length(assign3$dest_loc_region)){ 
@@ -81,6 +89,8 @@ for(i in 1:length(assign3$dest_loc_port)){
   }
 }
 
+
+#Fill Destination Region Elmina, Ardra, Angola, Arguin from historical port data
 for(i in 1:length(assign3$dest_loc_port_arch)){ 
   if (assign3$dest_loc_port_arch[i] %in% c("Elmina")){ 
     assign3$dest_loc_region_arch[i] <- "Elmina"
@@ -107,7 +117,7 @@ for(i in 1:length(assign3$dest_loc_port_arch)){
 
 
 q<- assign3 %>%
-  filter(is.na(dest_loc_region_arch))
+  filter(is.na(orig_loc_region_arch))
 
 # Change Guinea to Elmina
 
@@ -263,7 +273,7 @@ makassar@data <- data.frame() %>%
 
 malacca@data <- data.frame() %>%
     add_column(Country = "Country") %>%
-    add_row(Country = "Malakka")
+    add_row(Country = "Mallaka")
 
 mokka@data <- data.frame() %>%
     add_column(Country = "Country") %>%
@@ -338,7 +348,7 @@ ab <- raster::union(ab,batavia)
 ab <- raster::union(ab,bengalE)
 ab <- raster::union(ab,capeTown)
 ab <- raster::union(ab,ceylon)
-# ab <- raster::union(ab,cGoodHope) #Also problems with this one
+#ab <- raster::union(ab,cGoodHope) #Also problems with this one
 ab <- raster::union(ab,cheribon)
 ab <- raster::union(ab,coromandel)
 ab <- raster::union(ab,dutchrep)
