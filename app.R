@@ -628,7 +628,7 @@ server <- function(input, output, session) {
                        filter(orig_loc_region_arch == myLoc)%>%
                        filter(company == "WIC")
                      
-                     if(nrow(dataforVOC) == 0) {
+                     if(nrow(dataforWIC) == 0) {
                        df <- data.frame(
                          label=c("No available data"),
                          x = c(1.5), y =c(1.5))
