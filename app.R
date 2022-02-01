@@ -548,7 +548,8 @@ server <- function(input, output, session) {
               geom_col(aes(x = dest_yr, y = as.numeric(textile_quantity)),
                        fill = "#FB8B24") +
               theme_bw() +
-              labs(title = input$inputChoice_two, x ="Year", y = "Total Quantity")
+              labs(title = paste("The quantity of", input$inputChoice_two, "from", input$map_shape_click$id, "exported by year"), x ="Year", y = "Total Quantity")
+        
         } else {
           switch(input$inputChoice_two,
                    "All" = {
@@ -562,7 +563,7 @@ server <- function(input, output, session) {
                            summarise(mean_value = mean(piece_rate))%>%
                            ggplot()+
                            geom_tile(aes(x = orig_loc_port_arch, y= textile_name, fill = mean_value))+
-                           labs(x = "Origin Port", y = "Textile") + 
+                           labs(title = paste("A chart of all exports from", input$map_shape_click$id, "ports") ,x = "Origin Port", y = "Textile") + 
                            guides(fill=guide_legend(title="Mean Value per Piece")) +
                            scale_fill_gradient(low = "#460B2F", high = "#E36414", na.value = NA)
 
@@ -578,7 +579,7 @@ server <- function(input, output, session) {
                            geom_col(aes(x = dest_yr, y = as.numeric(textile_quantity)),
                                     fill = "#FB8B24") +
                            theme_bw() +
-                           labs(title = input$inputChoice_two, x ="Year", y = "Total Quantity")
+                          labs(title = paste("Quanity of Textiles Shipped out of",input$map_shape_click$id ,"by Both VOC/WIC"), x ="Year", y = "Total Quantity")
                    },
                    
                    "WIC" = {
@@ -599,7 +600,7 @@ server <- function(input, output, session) {
                          geom_col(aes(x = dest_yr, y = as.numeric(textile_quantity)),
                                   fill = "#FB8B24") +
                          theme_bw() +
-                         labs(title = input$inputChoice_two, x ="Year", y = "Total Quantity")
+                         labs(title = paste("Quanity of Textiles Shipped out of",input$map_shape_click$id ,"by the", input$inputChoice_two, "Company"), x ="Year", y = "Total Quantity")
                        
                      }
                        
@@ -627,7 +628,7 @@ server <- function(input, output, session) {
                              geom_col(aes(x = dest_yr, y = as.numeric(textile_quantity)),
                                       fill = "#FB8B24") +
                              theme_bw() +
-                             labs(title = input$inputChoice_two, x ="Year", y = "Total Quantity")
+                             labs(title = paste("Quanity of Textiles Shipped out of",input$map_shape_click$id ,"by the", input$inputChoice_two, "Company"), x ="Year", y = "Total Quantity")
                      }  
                    },
                    
@@ -696,42 +697,40 @@ server <- function(input, output, session) {
                    
                    "Year" = {
                        reset_map(output,input, NULL)
+                     
+                     output$plot <- renderPlot({
                        require(scales)
-                       test <- textile.data %>%
-                           filter(orig_loc_region_arch == input$map_shape_click$id)
+                       test <- assign3 %>%
+                         drop_na(orig_loc_port_arch)
                        #Need to group into seperate dataset for the aggregate function
-                       test2 <-aggregate(test$total_value_guldens, by = list(year = test$orig_yr, color = test$textile_color_arch), FUN = sum)
+                       test2 <-aggregate(as.numeric(test$textile_quantity), by = list(year = test$orig_yr), FUN = sum)
                        ggplot(data = test2) + 
-                           geom_area(mapping = aes(x = year, 
-                                                   y = x, 
-                                                   fill = color
-                           )) + xlab("Year") + ylab("Textile Value") +
-                           #This + require(scales) allows the y axis to look much cleaner
-                           scale_y_continuous(labels = comma)
-                       # scale_fill_manual(values=c("#460B2F", "#FB8B24", "#9A031E", "#E36414", "#894E19", "#3E2362", "#000000"))
-                       
-                       temp <- textile.data %>%
-                           filter(orig_loc_region_arch == input$map_shape_click$id)
-                       temp2 <- aggregate(as.numeric(temp$textile_quantity), by = list(year = temp$orig_yr), FUN = sum)
-                       ggplot(data = temp2) +
-                           geom_area(mapping = aes(x = year, 
-                                                   y = x
-                           ))+ xlab("Year") + ylab("Textile Value")
-                       
+                         geom_area(mapping = aes(x = year, 
+                                                 y = x,
+                                                 fill = "#FB8B24",
+                         )) +
+                         theme(legend.position = "none") +
+                         labs(title = "Total Quantity of All Textiles Shipped", x = "Year", y = "Textile Quantity") +
+                         scale_fill_manual(values=c("#FB8B24")) +
+                         scale_x_binned("Year") #Displays all of the year
+                     })
                    },
                    
                    
                    
-                   "Modifiers" = {
-                      reset_map(output,input, NULL)
-                   textile.data %>%
-                       filter(orig_loc_region_arch == input$map_shape_click$id)%>%
-                       ggplot() + 
-                       geom_col(aes(x = dest_yr, y = as.numeric(textile_quantity)),
-                                fill = "blue") +
-                       theme_bw() +
-                       labs(x = input$inputChoice)
-                   })
+                  "Modifiers" = {
+                   reset_map(output,input, NULL)
+                   
+                   #HISTOGRAM FOR COLOR DISTRIBUTION
+                   assign3 %>%
+                     filter(textile_color_arch == "black") %>%
+                     ggplot()+
+                     geom_histogram(mapping = aes(x = as.numeric(textile_quantity)),
+                                    bins = 30,
+                                    color = "black",
+                                    fill = "black") +
+                     labs(title = paste("Distribution of shipment sizes based on", "Textile Color"), x = "Textile quantity (singular shipment)")
+                 })
         }
     })
     
