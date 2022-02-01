@@ -94,6 +94,15 @@ for(i in 1:length(assign3$dest_loc_port_arch)){
   if (assign3$dest_loc_port_arch[i] %in% c("Arguin")){ 
     assign3$dest_loc_region_arch[i] <- "Arguin"
   }
+  if (assign3$dest_loc_port_arch[i] %in% c("Elmina and Ardra")){ 
+    assign3$dest_loc_region_arch[i] <- "Elmina"
+  }
+  if (assign3$dest_loc_port_arch[i] %in% c("Ardra & Suriname")){ 
+    assign3$dest_loc_region_arch[i] <- "Ardra"
+  }
+  if (assign3$dest_loc_port_arch[i] %in% c("Elmina and Angola")){ 
+    assign3$dest_loc_region_arch[i] <- "Elmina"
+  }
 }
 
 
