@@ -544,29 +544,42 @@ server <- function(input, output, session) {
     change <<- TRUE
 
     output$plot <- renderPlotly({
-
-        if(is_null(input$map_shape_click$id) && !is_null(input$location)) {
+      
+      print(paste("myLoc: ", myLoc, " input$location: ", input$location, "input$map_shape_click$id: ", input$map_shape_click$id))
+      #if the user has not selected a map location or a dropdown location)
+      if(is_null(input$map_shape_click$id) && myLoc == " " ) {
+        print(1)
+        myLoc <<- "Batavia"
+        updateSelectInput(inputId = "location", choices = unique(assign3$orig_loc_region_arch), selected = myLoc)
+        
+        #if the user has not selected a map location and the user has selected a dropdown location
+      }else if(is_null(input$map_shape_click$id) && !is_null(input$location)) {
+        print(2)
           myLoc <<- input$location
           updateSelectInput(inputId = "location", choices = unique(assign3$orig_loc_region_arch), selected = myLoc)
           
-        } else if (is_null(input$map_shape_click$id)) {
-          myLoc <<- "Batavia"
-          updateSelectInput(inputId = "location", choices = unique(assign3$orig_loc_region_arch), selected = myLoc)
-        } else {
+         #if the user has seleccted a map location or dropdown
+      } else {
           if(input$map_shape_click$id != myLoc) {
-            change = TRUE
-          }
-          if(input$location != myLoc ) {
-            change = FALSE
-          }
-          if(change == TRUE) {
+            print(3)
             myLoc <<- input$map_shape_click$id
             updateSelectInput(inputId = "location", choices = unique(assign3$orig_loc_region_arch), selected = myLoc)
-
-          }
-          if(change == FALSE) {
+            
+          } else if (input$location != myLoc ) {
+            print(4)
             myLoc <<- input$location
+            updateSelectInput(inputId = "location", choices = unique(assign3$orig_loc_region_arch), selected = myLoc)
+            
           }
+          # if(change == TRUE) {
+          #   myLoc <<- input$map_shape_click$id
+          #   updateSelectInput(inputId = "location", choices = unique(assign3$orig_loc_region_arch), selected = myLoc)
+          # }
+          # if(change == FALSE) {
+          #   myLoc <<- input$location
+          #   updateSelectInput(inputId = "location", choices = unique(assign3$orig_loc_region_arch), selected = myLoc)
+          #   
+          # }
         }
       
       print(paste("selected" , myLoc))
