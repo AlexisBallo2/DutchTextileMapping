@@ -542,8 +542,7 @@ server <- function(input, output, session) {
     reset_map(output,input, NULL)
     
     change <<- TRUE
-    
-#<<<<<<< HEAD
+
     output$plot <- renderPlotly({
 
         if(is_null(input$map_shape_click$id)) {
