@@ -552,7 +552,7 @@ server <- function(input, output, session) {
     
     myLoc <<- " "
     output$dropdown <- renderLeaflet({
-        #switch_func(input,session, NULL)
+        switch_func(input,session, myLoc)
     })
     
     #reset_map(output,input, myLoc)
@@ -560,36 +560,41 @@ server <- function(input, output, session) {
     change <<- TRUE
 
     output$plot <- renderPlotly({
-      #switch_func(input,session, myLoc)
-      print(paste("myLoc: ", myLoc, " input$location: ", input$location, "input$map_shape_click$id: ", input$map_shape_click$id))
+
       #if the user has not selected a map location or a dropdown location)
       if(is_null(input$map_shape_click$id) && myLoc == " " ) {
-        print(1)
+
         myLoc <<- "Batavia"
         updateSelectInput(inputId = "location", choices = unique(assign3$orig_loc_region_arch), selected = myLoc)
         
         #if the user has not selected a map location and the user has selected a dropdown location
       }else if(is_null(input$map_shape_click$id) && !is_null(input$location)) {
-        print(2)
+
           myLoc <<- input$location
           updateSelectInput(inputId = "location", choices = unique(assign3$orig_loc_region_arch), selected = myLoc)
           
          #if the user has seleccted a map location or dropdown
       } else {
           if(input$map_shape_click$id != myLoc) {
-            print(3)
+  
             myLoc <<- input$map_shape_click$id
             updateSelectInput(inputId = "location", choices = unique(assign3$orig_loc_region_arch), selected = myLoc)
             
           } else if (input$location != myLoc ) {
-            print(4)
+
             myLoc <<- input$location
             updateSelectInput(inputId = "location", choices = unique(assign3$orig_loc_region_arch), selected = myLoc)
             
           }
         }
       
-      print(paste("selected" , myLoc))
+      if(input$inputChoice_two == "") {
+        text_choices <- assign3 %>%
+          filter(orig_loc_region_arch == myLoc)
+        updateSelectInput(inputId = "inputChoice_two", choices = c("All" = "All", unique(text_choices$textile_name)))
+        
+      }
+      print(input$inputChoice_two)
       
       #Conditionals based on user input from the drop down menu
 
