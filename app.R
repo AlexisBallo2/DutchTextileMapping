@@ -10,6 +10,7 @@ library(rnaturalearth)
 library(WDI)
 library(tigris)
 library(plotly)
+library(reactlog)
 
 options(scipen = 100000)
 
@@ -407,18 +408,20 @@ color2 <- colorNumeric(palette = "RdYlBu",
 #myLoc = ""
 
 #Avoid tedious rewrites
-switch_func <- function(input,session){
+switch_func <- function(input,session, passedmyLoc){
+  print(paste("switch function called with my Loc of ", passedmyLoc))
     switch(input$inputChoice,
            "Textile Name" = {
-             #this allows me to filter the data and only select textiles that are exported
-             if(is_null(myLoc)) {
-               return()
-             } else {
                text_choices <- assign3 %>%
-                 filter(orig_loc_region_arch == myLoc)
-               updateSelectInput(session = session, inputId = "inputChoice_two", choices = c("All", unique(text_choices$textile_name)))
+                 filter(orig_loc_region_arch == passedmyLoc)
                
-             }
+               #null value means we DONT want to update the list 
+              updateSelectInput(session = session, inputId = "inputChoice_two", choices = c("All" = "All", unique(text_choices$textile_name)), selected = input$inputChoice_two)#, selected = myLoc)
+                 
+         
+               
+
+             # }
            },
            
            "Company (WIC/VOC)" = {
@@ -444,10 +447,6 @@ reset_map <- function(output,input,location){
   
     output$map <- renderLeaflet({
       
-      
-      #updateSelectInput(inputId = "location", choices = unique(assign3$orig_loc_region_arch), selected = myLoc)
-      
-  
       print(paste(myLoc, "resetting map..."))
         
         return_graph <- ab %>% 
@@ -461,10 +460,12 @@ reset_map <- function(output,input,location){
                         weight = 1,
                         stroke = 1) %>%
             setView(65.25,10, 2)
+        
+        #IF we have a location we want the lines of
         if(!is_null(location)) {
-          print(paste(myLoc,input$inputChoice_two))
+          #print(paste(myLoc,input$inputChoice_two))
           mayb <- assign3 %>%
-            filter(orig_loc_region_arch == myLoc & textile_name == input$inputChoice_two)
+            filter(orig_loc_region_arch == location & textile_name == input$inputChoice_two)
           
           maybe <- mayb[ , c("orig_loc_region_arch", "orig_loc_lat", "orig_loc_long", "dest_loc_port","dest_loc_lat", "dest_loc_long", "dest_loc_region_arch")]
           
@@ -537,14 +538,15 @@ server <- function(input, output, session) {
     
     myLoc <<- " "
     output$dropdown <- renderLeaflet({
-        switch_func(input,session)
+        #switch_func(input,session, NULL)
     })
-    reset_map(output,input, NULL)
+    
+    #reset_map(output,input, myLoc)
     
     change <<- TRUE
 
     output$plot <- renderPlotly({
-      
+      #switch_func(input,session, myLoc)
       print(paste("myLoc: ", myLoc, " input$location: ", input$location, "input$map_shape_click$id: ", input$map_shape_click$id))
       #if the user has not selected a map location or a dropdown location)
       if(is_null(input$map_shape_click$id) && myLoc == " " ) {
@@ -571,15 +573,6 @@ server <- function(input, output, session) {
             updateSelectInput(inputId = "location", choices = unique(assign3$orig_loc_region_arch), selected = myLoc)
             
           }
-          # if(change == TRUE) {
-          #   myLoc <<- input$map_shape_click$id
-          #   updateSelectInput(inputId = "location", choices = unique(assign3$orig_loc_region_arch), selected = myLoc)
-          # }
-          # if(change == FALSE) {
-          #   myLoc <<- input$location
-          #   updateSelectInput(inputId = "location", choices = unique(assign3$orig_loc_region_arch), selected = myLoc)
-          #   
-          # }
         }
       
       print(paste("selected" , myLoc))
@@ -588,8 +581,11 @@ server <- function(input, output, session) {
 
       
       #if the input is a textile... graph it
+      switch_func(input, session, myLoc)
       if(input$inputChoice_two %in% unique(assign3$textile_name)) {
-        reset_map(output,input, input$inputChoice_two)
+        print("x here")
+        reset_map(output,input, myLoc)
+      
         assign3 %>%
           filter(orig_loc_region_arch == myLoc)%>%
            filter(textile_name == input$inputChoice_two ) %>%
@@ -603,7 +599,9 @@ server <- function(input, output, session) {
           switch(input$inputChoice_two,
                    "All" = {
                        #Change graph back to normal
-                       reset_map(output,input, NULL)
+                        reset_map(output,input, NULL)
+                        switch_func(input, session, myLoc)
+                     
                        
                    g<- assign3 %>% 
                            group_by(orig_loc_port_arch, textile_name) %>% 
@@ -690,7 +688,7 @@ server <- function(input, output, session) {
                            
                            print(paste(myLoc, "origin map"))
                            
-                           switch_func(input,session)
+                           switch_func(input,session, myLoc)
                            
                            ab.origin %>%
                                leaflet() %>%
@@ -721,7 +719,7 @@ server <- function(input, output, session) {
                            
                            print(paste(myLoc, "destination"))
                            
-                           switch_func(input,session)
+                           switch_func(input,session, NULL)
                            
                            ab.dest %>%
                                leaflet() %>%
@@ -802,12 +800,14 @@ server <- function(input, output, session) {
     
 }
 #live loading of shiny app
+options(shiny.reactlog= TRUE)
 options(shiny.autoreload = TRUE)
 shinyApp(ui, server)
 
 
 
 
+#options(shiny.reactlog= TRUE)
 
 
 
