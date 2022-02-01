@@ -51,7 +51,13 @@ for(i in 1:length(textile.data$textile_unit)){
     if (assign3$orig_loc_region_modern[i] %in% c("Netherlands")){ 
         assign3$orig_loc_region_arch[i] <- "Dutch Republic"
     }
-    }
+}
+
+for(i in 1:length(assign3$dest_loc_region)){ 
+  if (assign3$dest_loc_region[i] %in% c("Angola")){ 
+    assign3$dest_loc_region_arch[i] <- "Angola"
+  }
+}
 
 
 
@@ -431,6 +437,10 @@ ui <- fluidPage(
   titlePanel("Dutch Textile Trade"),
       tags$div(class = "container", 
                tags$div(class = "options",
+                        
+                        tags$div(class = "selected",
+                                 textOutput("selectedCountry")
+                                 ),
                          selectInput(inputId = "inputChoice",
                                      label = "Choose identifier!",
                                      choices = c("Textile Name", "Company (WIC/VOC)", "Origin", "Destination", "Year", "Modifiers")),
@@ -449,6 +459,13 @@ ui <- fluidPage(
 
 server <- function(input, output, session) {
     
+    output$selectedCountry <- renderText({
+      if(is_null(input$map_shape_click$id)) {
+        "Please Select a Location"
+      } else {
+        input$map_shape_click$id
+      }
+    })
      
     output$dropdown <- renderLeaflet({
         switch_func(input,session)
@@ -510,7 +527,7 @@ server <- function(input, output, session) {
                    },
                    
                    "WIC" = {
-                       reset_map(output,input, NULL)
+                      reset_map(output,input, NULL)
                       
                      dataforWIC <- assign3 %>%
                        filter(orig_loc_region_arch == input$map_shape_click$id)%>%
