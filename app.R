@@ -476,7 +476,7 @@ server <- function(input, output, session) {
               geom_col(aes(x = dest_yr, y = as.numeric(textile_quantity)),
                        fill = "#FB8B24") +
               theme_bw() +
-              labs(title = input$inputChoice_two, x ="Year", y = "Total Quantity")
+              labs(title = paste("The quantity of", input$inputChoice_two, "from", input$map_shape_click$id, "exported by year"), x ="Year", y = "Total Quantity")
         } else {
           switch(input$inputChoice_two,
                    "All" = {
@@ -490,7 +490,7 @@ server <- function(input, output, session) {
                            summarise(mean_value = mean(piece_rate))%>%
                            ggplot()+
                            geom_tile(aes(x = orig_loc_port_arch, y= textile_name, fill = mean_value))+
-                           labs(x = "Origin Port", y = "Textile") + 
+                           labs(title = paste("A chart of all exports from", input$map_shape_click$id, "ports") ,x = "Origin Port", y = "Textile") + 
                            guides(fill=guide_legend(title="Mean Value per Piece")) +
                            scale_fill_gradient(low = "#460B2F", high = "#E36414", na.value = NA)
 
@@ -506,7 +506,7 @@ server <- function(input, output, session) {
                            geom_col(aes(x = dest_yr, y = as.numeric(textile_quantity)),
                                     fill = "#FB8B24") +
                            theme_bw() +
-                           labs(title = input$inputChoice_two, x ="Year", y = "Total Quantity")
+                          labs(title = paste("Quanity of Textiles Shipped out of",input$map_shape_click$id ,"by Both VOC/WIC"), x ="Year", y = "Total Quantity")
                    },
                    
                    "WIC" = {
@@ -527,7 +527,7 @@ server <- function(input, output, session) {
                          geom_col(aes(x = dest_yr, y = as.numeric(textile_quantity)),
                                   fill = "#FB8B24") +
                          theme_bw() +
-                         labs(title = input$inputChoice_two, x ="Year", y = "Total Quantity")
+                         labs(title = paste("Quanity of Textiles Shipped out of",input$map_shape_click$id ,"by the", input$inputChoice_two, "Company"), x ="Year", y = "Total Quantity")
                        
                      }
                        
@@ -555,7 +555,7 @@ server <- function(input, output, session) {
                              geom_col(aes(x = dest_yr, y = as.numeric(textile_quantity)),
                                       fill = "#FB8B24") +
                              theme_bw() +
-                             labs(title = input$inputChoice_two, x ="Year", y = "Total Quantity")
+                            labs(title = paste("Quanity of Textiles Shipped out of",input$map_shape_click$id ,"by the", input$inputChoice_two, "Company"), x ="Year", y = "Total Quantity")
                      }  
                    },
                    
