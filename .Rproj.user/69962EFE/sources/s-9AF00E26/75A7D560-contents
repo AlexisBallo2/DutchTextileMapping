@@ -26,25 +26,28 @@ h2 {
 
 .map {
  width:60%;
- margin-left:auto;
- margin-right: auto;
+ margin-right: 10%;
+float:right;
+display:inline;
+
 }
 
 .container {
-  position:relative;
   width:100%;
-  padding: 50px;
+  padding: 100px;
+  position:relative;
 }
 
 
 .options {
   width: 200px;
-  margin-left:40px;
+  float:left;
   display:inline;
   position: absolute;
   top: 50%;
-  left:0px;
+  -ms-transform: translateY(-50%);
   transform: translateY(-50%);
+
 }
 
 .inorderul li {

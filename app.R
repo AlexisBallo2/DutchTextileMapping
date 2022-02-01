@@ -544,8 +544,7 @@ ui <- fluidPage(
   ),
   titlePanel("Dutch Textile Trade"),
       tags$div(class = "container", 
-               tags$div(class = "options",
-                        
+               tags$div(class = "options", 
                         selectInput(inputId = "location",
                                     label = "Choose Location",
                                     choices = c("All" = " ", unique(assign3$orig_loc_region_arch))
@@ -569,21 +568,23 @@ ui <- fluidPage(
 
 server <- function(input, output, session) {
     
+    #init the myLoc variable
     myLoc <<- " "
+    
+    #the third dropdown with the textile names!!
     output$dropdown <- renderLeaflet({
         switch_func(input,session, myLoc)
     })
     
-    #reset_map(output,input, myLoc)
-    
-    change <<- TRUE
-
+    #the bottom plots
     output$plot <- renderPlotly({
 
       #if the user has not selected a map location or a dropdown location)
       if(is_null(input$map_shape_click$id) && myLoc == " " ) {
-
+        
+        #make the default batavia
         myLoc <<- "Batavia"
+        #update the dropdown to show batavia
         updateSelectInput(inputId = "location", choices = unique(assign3$orig_loc_region_arch), selected = myLoc)
         
         #if the user has not selected a map location and the user has selected a dropdown location
@@ -600,16 +601,16 @@ server <- function(input, output, session) {
             updateSelectInput(inputId = "location", choices = unique(assign3$orig_loc_region_arch), selected = myLoc)
             
           } else if (input$location != myLoc ) {
-
             myLoc <<- input$location
             updateSelectInput(inputId = "location", choices = unique(assign3$orig_loc_region_arch), selected = myLoc)
             
           }
         }
       
-      if(input$inputChoice_two == "") {
-        text_choices <- assign3 %>%
-          filter(orig_loc_region_arch == myLoc)
+      #if no choice is selected for textile 
+      text_choices <- assign3 %>%
+        filter(orig_loc_region_arch == myLoc)
+      if(input$inputChoice_two == "" || !input$inputChoice_two %in% unique(text_choices$textile_name)) {
         updateSelectInput(inputId = "inputChoice_two", choices = c("All" = "All", unique(text_choices$textile_name)))
         
       }
