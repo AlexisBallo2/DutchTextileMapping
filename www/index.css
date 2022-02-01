@@ -1,0 +1,58 @@
+
+body {
+  margin:0px;
+  background-color : #76b1f5;
+  height:100%;
+ /* position:absolute; */
+}
+
+.container-fluid {
+  padding:0px;
+}
+
+h2 {
+  text-align: center;
+  background-color:lightgrey;
+  margin:0;
+  padding:30px;
+  margin-bottom: 30px;
+  border-bottom: 2px solid black;
+  border-top: 2px solid black;
+}
+
+.mapdiv {
+  /*width:500px; */
+}
+
+.map {
+ width:60%;
+ margin-left:auto;
+ margin-right: auto;
+}
+
+.container {
+  position:relative;
+  width:100%;
+  padding: 50px;
+}
+
+
+.options {
+  width: 200px;
+  margin-left:40px;
+  display:inline;
+  position: absolute;
+  top: 50%;
+  left:0px;
+  transform: translateY(-50%);
+}
+
+.inorderul li {
+}
+
+.inorderulLi {
+    width:100px;
+    height:100px;
+}
+
+
