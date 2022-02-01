@@ -241,7 +241,7 @@ bengalE@data <- data.frame() %>%
 
 capeTown@data <- data.frame() %>%
     add_column(Country = "Country") %>%
-    add_row(Country = "capeTown")
+    add_row(Country = "Cape Town")
 
 ceylon@data <- data.frame() %>%
     add_column(Country = "Country") %>%
@@ -273,7 +273,7 @@ makassar@data <- data.frame() %>%
 
 malacca@data <- data.frame() %>%
     add_column(Country = "Country") %>%
-    add_row(Country = "Mallaka")
+    add_row(Country = "Malakka")
 
 mokka@data <- data.frame() %>%
     add_column(Country = "Country") %>%
