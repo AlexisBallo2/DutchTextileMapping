@@ -783,7 +783,7 @@ server <- function(input, output, session) {
           data %>%
             ggplot()+
             geom_histogram(mapping = aes(x = as.numeric(real_quantity)),
-                           bins = 75,
+                           bins = 25,
                            color = "black",
                            fill = "black"
             ) +
@@ -806,7 +806,7 @@ server <- function(input, output, session) {
           data %>%
             ggplot()+
             geom_histogram(mapping = aes(x = as.numeric(real_quantity)),
-                           bins = 75,
+                           bins = 25,
                            color = "black",
                            fill = "black"
             ) +
