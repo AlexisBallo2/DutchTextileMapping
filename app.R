@@ -438,7 +438,6 @@ color2 <- colorNumeric(palette = "RdYlBu",
                       domain = ab.dest@data$region.value2)
 
 
-#myLoc = ""
 
 #Avoid tedious rewrites
 switch_func <- function(input,session, passedmyLoc){
@@ -447,14 +446,8 @@ switch_func <- function(input,session, passedmyLoc){
            "Textile Name" = {
                text_choices <- assign3 %>%
                  filter(orig_loc_region_arch == passedmyLoc)
-               
-               #null value means we DONT want to update the list 
               updateSelectInput(session = session, inputId = "inputChoice_two", choices = c("All" = "All", unique(text_choices$textile_name)), selected = input$inputChoice_two)#, selected = myLoc)
-                 
-         
-               
 
-             # }
            },
            
            "Company (WIC/VOC)" = {
@@ -476,7 +469,7 @@ switch_func <- function(input,session, passedmyLoc){
 
 
 #Resets the ma
-reset_map <- function(output,input,location){
+reset_map <- function(output,input,location, area){
   
     output$map <- renderLeaflet({
       
@@ -485,8 +478,7 @@ reset_map <- function(output,input,location){
         return_graph <- ab.dest %>% 
             leaflet() %>%
           addProviderTiles("CartoDB.PositronNoLabels") %>%
-           # addTiles %>%
-            addPolygons(color = "black",
+            addPolygons(color = ifelse(ab@data$new.country == area, "red",  "black"),
                         label = ~new.country,
                         layerId = ab@data$new.country,
                         opacity = 1,
@@ -494,7 +486,7 @@ reset_map <- function(output,input,location){
                         stroke = 1) %>%
             setView(65.25,10, 2)
         
-        #IF we have a location we want the lines of
+        
         if(!is_null(location)) {
           #print(paste(myLoc,input$inputChoice_two))
           mayb <- assign3 %>%
@@ -623,7 +615,7 @@ server <- function(input, output, session) {
       switch_func(input, session, myLoc)
       if(input$inputChoice_two %in% unique(assign3$textile_name)) {
         print("x here")
-        reset_map(output,input, myLoc)
+        reset_map(output,input, myLoc, NULL)
       
         assign3 %>%
           filter(orig_loc_region_arch == myLoc)%>%
@@ -638,7 +630,7 @@ server <- function(input, output, session) {
           switch(input$inputChoice_two,
                    "All" = {
                        #Change graph back to normal
-                        reset_map(output,input, NULL)
+                        reset_map(output,input, NULL, myLoc)
                         switch_func(input, session, myLoc)
                      
                        
@@ -699,7 +691,7 @@ server <- function(input, output, session) {
                    
                    "VOC" = {
                      #Change the graph back to normal
-                     reset_map(output,input, NULL)
+                     reset_map(output,input, NULL, NULL)
                      
                      dataforVOC <- assign3 %>%
                        filter(orig_loc_region_arch == myLoc)%>%
@@ -786,7 +778,7 @@ server <- function(input, output, session) {
                    
                    "Year" = {
                        
-                     reset_map(output,input, NULL)
+                     reset_map(output,input, NULL, NULL)
                      
                      require(scales)
                      temp <- assign3 %>%
@@ -815,7 +807,7 @@ server <- function(input, output, session) {
                      }
                    },
                   "Modifiers" = {
-                   reset_map(output,input, NULL)
+                   reset_map(output,input, NULL, NULL)
                    
                    #HISTOGRAM FOR COLOR DISTRIBUTION
                    assign3 %>%

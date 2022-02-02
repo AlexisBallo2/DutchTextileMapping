@@ -26,6 +26,7 @@ h2 {
 
 .map {
  width:60%;
+ margin:10px;
  margin-right: 10%;
 float:right;
 display:inline;
@@ -41,6 +42,7 @@ display:inline;
 
 .options {
   width: 200px;
+  margin:10px;
   float:left;
   display:inline;
   position: absolute;
