@@ -37,7 +37,7 @@ for(i in 1:length(textile.data$textile_unit)){
     assign3$real_quantity[i] <- as.numeric(textile.data$textile_quantity[i])*as.numeric(assign3$els_per_ps[i], na.rm = TRUE)
     assign3$clean_unit[i] = str_replace(assign3$clean_unit[i], "NO", "ps")
   }
-  else  if(textile.data$textile_unit[i] %in% c("ps","stux", "ps.")){
+  else  if(textile.data$textile_unit[i] %in% c("ps","stux", "ps.", "full ps//.")){
     assign3$real_quantity[i] <- as.numeric(textile.data$textile_quantity[i])
     assign3$clean_unit[i] = str_replace(assign3$clean_unit[i], "NO", "ps")
   }
@@ -67,8 +67,9 @@ zzz<- assign3 %>%
 
 zw<- assign3 %>%
   filter(clean_unit == "NO") %>%
-  group_by(textile_name) %>%
+  group_by(textile_name, textile_unit) %>%
   summarise(sum = sum(real_guldens, na.rm  = TRUE))
+
 
 ## Change Guinea to Elmina
 assign3$dest_loc_region_arch = str_replace(assign3$dest_loc_region_arch, "Guinea", "Elmina")
@@ -364,7 +365,7 @@ dutchrep@data <- data.frame() %>%
 
 bantam@data <- data.frame() %>%
     add_column(Country = "Country") %>%
-    add_row(Country = "Bantam")
+    add_row(Country = "Java")
 
 arguin@data <- data.frame() %>%
     add_column(Country = "Country") %>%
@@ -418,24 +419,24 @@ ab@data <- ab@data %>%
 #For coloring the map if the user selects origin
 export_val <- assign3 %>%
     group_by(orig_loc_region_arch)%>%
-    summarise(region.value = sum(real_guldens, na.rm  = TRUE))
+    summarise(export.value = sum(real_guldens, na.rm  = TRUE))
 ab.origin <- ab
 ab.origin@data<- ab@data %>% 
     left_join(export_val, by = c("new.country" = "orig_loc_region_arch"), na.omit = TRUE)
 color <- colorNumeric(palette = "RdYlBu",
                       reverse = TRUE,
-                      domain = ab.origin@data$region.value)
+                      domain = ab.origin@data$export.value)
 
 #If user selects destination
 import_val <- assign3 %>%
     group_by(dest_loc_region_arch)%>%
-    summarise(region.value2 = sum(real_guldens, na.rm  = TRUE))
+    summarise(import.value = sum(real_guldens, na.rm  = TRUE))
 ab.dest <- ab.origin
 ab.dest@data<- ab.origin@data %>% 
     left_join(import_val, by = c("new.country" = "dest_loc_region_arch"), na.omit = TRUE)
 color2 <- colorNumeric(palette = "RdYlBu",
                        reverse = TRUE,
-                      domain = ab.dest@data$region.value2)
+                      domain = ab.dest@data$import.value)
 
 
 #myLoc = ""
@@ -735,14 +736,14 @@ server <- function(input, output, session) {
                                addPolygons(color = "black",
                                            label = ~new.country,
                                            layerId = ab.origin@data$new.country,
-                                           fillColor = ~color(region.value),
-                                           popup = ~region.value,
+                                           fillColor = ~color(export.value),
+                                           popup = ~export.value,
                                            fillOpacity = 1,
                                            opacity = 1,
                                            weight = 1,
                                            stroke = 1) %>%
                                setView(55.25,0, 3)  %>% #Sets view to center
-                               addLegend("topright", pal = color, values = ~region.value,
+                               addLegend("topright", pal = color, values = ~export.value,
                                          title = "Total Value (Guldens) Exported",
                                          na.label = "No Exports",
                                          labFormat = labelFormat(suffix = "g"),
@@ -766,14 +767,14 @@ server <- function(input, output, session) {
                                addPolygons(color = "black",
                                            label = ~new.country,
                                            layerId = ab.dest@data$new.country,
-                                           fillColor = ~color(region.value2),
-                                           popup = ~region.value2,
+                                           fillColor = ~color(import.value),
+                                           popup = ~import.value,
                                            fillOpacity = 1,
                                            opacity = 1,
                                            weight = 1,
                                            stroke = 1) %>%
                                setView(55.25,0, 3) %>% #Sets view to center
-                               addLegend("topright", pal = color, values = ~region.value2,
+                               addLegend("topright", pal = color, values = ~import.value,
                                          title = "Total Value (Guldens) Imported",
                                          na.label = "No Imports",
                                          labFormat = labelFormat(suffix = "g"),
