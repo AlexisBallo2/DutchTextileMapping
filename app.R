@@ -530,6 +530,100 @@ reset_map <- function(output,input,location){
   })
 }
 
+origin_map<- function(input,output,session){
+  
+  output$map <- renderLeaflet({
+    
+    print(paste(input$map_shape_click$id, "origin map"))
+
+    switch_func(input,session)
+
+    return_graph <- ab.origin %>%
+        leaflet() %>%
+        addTiles %>%
+        addPolygons(color = "black",
+                    label = ~new.country,
+                    layerId = ab.origin@data$new.country,
+                    fillColor = ~color(export.value),
+                    popup = ~export.value,
+                    fillOpacity = 1,
+                    opacity = 1,
+                    weight = 1,
+                    stroke = 1) %>%
+        setView(55.25,0, 3)  %>% #Sets view to center
+        addLegend("topright", pal = color, values = ~export.value,
+                  title = "Total Value (Guldens) Exported",
+                  na.label = "No Exports",
+                  labFormat = labelFormat(suffix = "g"),
+                  opacity = 1)
+    
+    return_graph
+    
+  
+  })
+  
+  g<- assign3 %>% 
+    group_by(orig_loc_port_arch, textile_name) %>% 
+    filter(piece_rate < 20) %>% #For now, filtering by cheap pieces
+    filter(orig_loc_region_arch == input$map_shape_click$id) %>%
+    summarise(mean_value = mean(piece_rate))%>%
+    ggplot()+
+    geom_tile(aes(x = orig_loc_port_arch, y= textile_name, fill = mean_value))+
+    labs(title = paste("A chart of all exports from", input$map_shape_click$id, "ports") ,x = "Origin Port", y = "Textile") + 
+    guides(fill=guide_legend(title="Mean Value per Piece")) +
+    scale_fill_gradient(low = "#460B2F", high = "#E36414", na.value = NA)
+  
+  ggplotly(g)
+  
+}
+
+destination_map<- function(input,output,session){
+    
+    output$map <- renderLeaflet({
+      
+      print(paste(input$map_shape_click$id, "destination"))
+      
+      switch_func(input,session)
+      
+      return_graph <- ab.dest %>%
+        leaflet() %>%
+        addTiles %>%
+        addPolygons(color = "black",
+                    label = ~new.country,
+                    layerId = ab.dest@data$new.country,
+                    fillColor = ~color2(import.value),
+                    popup = ~import.value,
+                    fillOpacity = 1,
+                    opacity = 1,
+                    weight = 1,
+                    stroke = 1) %>%
+        setView(55.25,0, 3) %>% #Sets view to center
+        addLegend("topright", pal = color2, values = ~import.value,
+                  title = "Total Value (Guldens) Imported",
+                  na.label = "No Imports",
+                  labFormat = labelFormat(suffix = "g"),
+                  opacity = 1)
+    
+      return_graph
+    
+    
+  })
+  
+  g<- assign3 %>% 
+    group_by(orig_loc_port_arch, textile_name) %>% 
+    filter(piece_rate < 20) %>% #For now, filtering by cheap pieces
+    filter(orig_loc_region_arch == input$map_shape_click$id) %>%
+    summarise(mean_value = mean(piece_rate))%>%
+    ggplot()+
+    geom_tile(aes(x = orig_loc_port_arch, y= textile_name, fill = mean_value))+
+    labs(title = paste("A chart of all exports from", input$map_shape_click$id, "ports") ,x = "Origin Port", y = "Textile") + 
+    guides(fill=guide_legend(title="Mean Value per Piece")) +
+    scale_fill_gradient(low = "#460B2F", high = "#E36414", na.value = NA)
+  
+  ggplotly(g)
+  
+}
+
 
 #Map, selection bar, graphs (high-> low)
 ui <- fluidPage(
@@ -695,62 +789,15 @@ server <- function(input, output, session) {
                    
                    
                    "Origin" = {
-                       output$map <- renderLeaflet({
-                           
-                           print(paste(input$map_shape_click$id, "origin map"))
-                           
-                           switch_func(input,session)
-                           
-                           ab.origin %>%
-                               leaflet() %>%
-                               addTiles %>%
-                               addPolygons(color = "black",
-                                           label = ~new.country,
-                                           layerId = ab.origin@data$new.country,
-                                           fillColor = ~color(export.value),
-                                           popup = ~export.value,
-                                           fillOpacity = 1,
-                                           opacity = 1,
-                                           weight = 1,
-                                           stroke = 1) %>%
-                               setView(55.25,0, 3)  %>% #Sets view to center
-                               addLegend("topright", pal = color, values = ~export.value,
-                                         title = "Total Value (Guldens) Exported",
-                                         na.label = "No Exports",
-                                         labFormat = labelFormat(suffix = "g"),
-                                         opacity = 1)
-                           
-                       })
-                   }
+                      
+                         origin_map(input,output,session)
+                      }
                    ,
                    
                    
                    "Destination" = {
-                       output$map <- renderLeaflet({
-                           
-                           print(paste(input$map_shape_click$id, "destination"))
-                           
-                           #switch_func(input,session, NULL)
-                           
-                           ab.dest %>%
-                               leaflet() %>%
-                               addTiles %>%
-                               addPolygons(color = "black",
-                                           label = ~new.country,
-                                           layerId = ab.dest@data$new.country,
-                                           fillColor = ~color2(import.value),
-                                           popup = ~import.value,
-                                           fillOpacity = 1,
-                                           opacity = 1,
-                                           weight = 1,
-                                           stroke = 1) %>%
-                               setView(55.25,0, 3) %>% #Sets view to center
-                               addLegend("topright", pal = color2, values = ~import.value,
-                                         title = "Total Value (Guldens) Imported",
-                                         na.label = "No Imports",
-                                         labFormat = labelFormat(suffix = "g"),
-                                         opacity = 1)
-                       })
+                       
+                      destination_map(input,output,session)
                        
                        },
                    
