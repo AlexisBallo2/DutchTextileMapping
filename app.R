@@ -646,26 +646,30 @@ ui <- fluidPage(
   ),
   titlePanel("Dutch Textile Trade"),
       tags$div(class = "container", 
-               tags$div(class = "options", 
-                        tags$div(class = "secCountry",
-                                 tags$label("Selected Country: "),
-                                  
-                                 textOutput(outputId = "selectedCountry")
-                                 ),
-                         selectInput(inputId = "inputChoice",
-                                     label = "Choose identifier!",
-                                     choices = c("Textile Name", "Company (WIC/VOC)", "Origin", "Destination", "Year", "Modifiers")),
-                         selectInput(inputId = "inputChoice_two",
-                                     label = "Choose what you would like to graph!",
-                                     choices = NULL),
-               ),
                tags$div(class = "map",
-                         leafletOutput(outputId = "map", width = "100%")
+                         leafletOutput(outputId = "map", width = "100%", height = "100%")
                ),
                tags$div(class = "plots",
-                        plotlyOutput(outputId = "plot")
+                        plotlyOutput(outputId = "plot", width = "100%", height = "100%")
                         ),
-               
+               tags$div(class = "options", 
+                        tags$div(class = "inlineOptions",
+                                 tags$label("Selected Country: "),
+                                 
+                                 textOutput(outputId = "selectedCountry")
+                        ),
+                        tags$div(class = "inlineOptions",
+                                 selectInput(inputId = "inputChoice",
+                                             label = "Choose identifier!",
+                                             choices = c("Textile Name", "Company (WIC/VOC)", "Origin", "Destination", "Year", "Modifiers"))
+                                 ),
+                        tags$div(class = "inlineOptions",
+                                 selectInput(inputId = "inputChoice_two",
+                                             label = "Choose what you would like to graph!",
+                                             choices = NULL)
+                                 ),
+                        
+               ),
         ),
       
        
