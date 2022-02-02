@@ -379,7 +379,7 @@ ardra@data <- data.frame() %>%
 ab <- raster::union(angola,arguin)
 ab <- raster::union(ab,ardra) #Fix later
 ab <- raster::union(ab,arguin)
-ab <- raster:: union(ab, bantam)
+ab <- raster::union(ab,bantam)
 ab <- raster::union(ab,batavia)
 ab <- raster::union(ab,bengalE)
 ab <- raster::union(ab,capeTown)
@@ -391,7 +391,7 @@ ab <- raster::union(ab,dutchrep)
 ab <- raster::union(ab,elmina)
 ab <- raster::union(ab,jambi)
 ab <- raster::union(ab,japan)
-#ab <- raster::union(ab,northeastJava) #/// #problems with geojson
+# ab <- raster::union(ab,northeastJava)/// #problems with geojson
 ab <- raster::union(ab,eastJava)
 ab <- raster::union(ab,makassar)
 ab <- raster::union(ab,malabar)
@@ -443,26 +443,13 @@ color2 <- colorNumeric(palette = "RdYlBu",
 #Avoid tedious rewrites
 switch_func <- function(input,session){
   switch(input$inputChoice,
-         "Export Data" = {
+         "Textile Name" = {
            #this allows me to filter the data and only select textiles that are exported
            if(is_null(input$map_shape_click$id)) {
              return()
            } else {
              text_choices <- assign3 %>%
                filter(orig_loc_region_arch == input$map_shape_click$id)
-             updateSelectInput(session = session, inputId = "inputChoice_two", choices = c("All", unique(text_choices$textile_name)))
-             
-           }
-         },
-         
-         
-         "Import Data" = {
-           #this allows me to filter the data and only select textiles that are exported
-           if(is_null(input$map_shape_click$id)) {
-             return()
-           } else {
-             text_choices <- assign3 %>%
-               filter(dest_loc_region_arch == input$map_shape_click$id)
              updateSelectInput(session = session, inputId = "inputChoice_two", choices = c("All", unique(text_choices$textile_name)))
              
            }
@@ -560,7 +547,7 @@ ui <- fluidPage(
                                  ),
                          selectInput(inputId = "inputChoice",
                                      label = "Choose identifier!",
-                                     choices = c("Export Data", "Company (WIC/VOC)", "Origin", "Destination", "Year", "Modifiers", "Import Data")),
+                                     choices = c("Textile Name", "Company (WIC/VOC)", "Origin", "Destination", "Year", "Modifiers")),
                          selectInput(inputId = "inputChoice_two",
                                      label = "Choose what you would like to graph!",
                                      choices = NULL),
@@ -631,23 +618,17 @@ server <- function(input, output, session) {
                            group_by(orig_loc_port_arch, textile_name) %>% 
                            filter(piece_rate < 20) %>% #For now, filtering by cheap pieces
                            filter(orig_loc_region_arch == input$map_shape_click$id) %>%
-
                            summarise(total_value = sum(real_guldens))%>%
                            ggplot()+
                            geom_tile(aes(x = orig_loc_port_arch, y= textile_name, fill = total_value))+
-
                            labs(title = paste("A chart of all exports from", input$map_shape_click$id, "ports") ,x = "Origin Port", y = "Textile") + 
-                           guides(fill=guide_legend(title="Total Value Shipped")) +
+                           guides(fill=guide_legend(title="Mean Value per Piece")) +
                            scale_fill_gradient(low = "#460B2F", high = "#E36414", na.value = NA)
-                    
-                   
 
                    ggplotly(g)
                    
                    
-                   
-                
-      },
+                   },
 
                    "Both" ={
                        #Change the graph back to normal
@@ -711,7 +692,7 @@ server <- function(input, output, session) {
                             labs(title = paste("Quanity of Textiles Shipped out of",input$map_shape_click$id ,"by the", input$inputChoice_two, "Company"), x ="Year", y = "Total Quantity")
                      }  
                    },
-
+                   
                    
                    "Origin" = {
                        output$map <- renderLeaflet({
