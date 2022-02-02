@@ -481,15 +481,28 @@ reset_map <- function(output,input,location){
     
     return_graph <- ab %>% 
       leaflet() %>%
-      addProviderTiles("CartoDB.PositronNoLabels") %>%
-      # addTiles %>%
-      addPolygons(color = "black",
-                  label = ~new.country,
-                  layerId = ab@data$new.country,
-                  opacity = 1,
-                  weight = 1,
-                  stroke = 1) %>%
-      setView(65.25,10, 2)
+      addProviderTiles("CartoDB.PositronNoLabels")
+    
+      if(is_null(input$map_shape_click$id)) {
+        return_graph <- return_graph %>% 
+          addPolygons(color = "black",
+                     label = ~new.country,
+                     layerId = ab@data$new.country,
+                     opacity = 1,
+                     weight = 1,
+                     stroke = 1) %>%
+          setView(65.25,10, 2)
+      } else {
+          return_graph <- return_graph %>% 
+            addPolygons(color = ifelse(input$map_shape_click$id == ab@data$new.country, "red", "black" ),
+                        label = ~new.country,
+                        layerId = ab@data$new.country,
+                        opacity = 1,
+                        weight = 1,
+                        stroke = 1) %>%
+            setView(65.25,10, 2)
+      }
+      
     if(!is_null(location)) {
       print(paste(input$map_shape_click$id,input$inputChoice_two))
       mayb <- assign3 %>%
@@ -588,7 +601,7 @@ destination_map<- function(input,output,session){
       return_graph <- ab.dest %>%
         leaflet() %>%
         addTiles %>%
-        addPolygons(color = "black",
+        addPolygons(color = "black", 
                     label = ~new.country,
                     layerId = ab.dest@data$new.country,
                     fillColor = ~color2(import.value),
