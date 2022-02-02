@@ -467,8 +467,16 @@ switch_func <- function(input,session){
          "Year" = {
            updateSelectInput(session = session, inputId = "inputChoice_two", choices = c("Year"))
          },
-         "Modifiers" = {
-           updateSelectInput(session = session, inputId = "inputChoice_two", choices = c("Color","Pattern"))
+         "Color" = {
+           #this allows me to filter the data and only select textiles that are exported
+           if(is_null(input$map_shape_click$id)) {
+             return()
+           } else {
+             text_choices <- assign3 %>%
+               filter(orig_loc_region_arch == input$map_shape_click$id)
+             updateSelectInput(session = session, inputId = "inputChoice_two", choices = c("All", unique(text_choices$textile_color_arch)))
+             
+           }
          }
   )
 }
@@ -664,7 +672,7 @@ ui <- fluidPage(
                         tags$div(class = "inlineOptions",
                                  selectInput(inputId = "inputChoice",
                                              label = "Choose identifier!",
-                                             choices = c("Textile Name", "Company (WIC/VOC)", "Origin", "Destination", "Year", "Modifiers"))
+                                             choices = c("Textile Name", "Company (WIC/VOC)", "Origin", "Destination", "Year", "Color", "Pattern"))
                                  ),
                         tags$div(class = "inlineOptions",
                                  selectInput(inputId = "inputChoice_two",
@@ -738,7 +746,31 @@ server <- function(input, output, session) {
           
         }
       
+        } 
+      else if(input$inputChoice_two %in% unique(assign3$textile_color_arch)) {
+        reset_map(output,input, input$map_shape_click$id)
+        myDf <- assign3 %>%
+          filter(orig_loc_region_arch == input$map_shape_click$id)%>%
+          filter(textile_color_arch == input$inputChoice_two)
+        print(paste("count: ", count(myDf)))
+        if(count(myDf) == 0) {
+          myDf <- data.frame(
+            label=c("No available data"),
+            x = c(1.5), y =c(1.5))
+          ggplot(df, aes(x=x, y=y, label=label)) + geom_text(mapping = aes(x = x, y = y), size = 10)
         } else {
+          data() %>%
+            ggplot()+
+            geom_histogram(mapping = aes(x = as.numeric(real_quantity)),
+                           bins = 75,
+                           color = "black",
+                           fill = "black"
+            ) +
+            labs(title = paste("Distribution of shipment sizes based on", input$inputChoice_two, "from", input$map_shape_click$id), x = "Textile quantity (singular shipment)") +
+            xlim(0,5000)
+          
+        }
+      }else {
           switch(input$inputChoice_two,
                    "All" = {
                        #Change graph back to normal
@@ -888,15 +920,16 @@ server <- function(input, output, session) {
                    
                    #HISTOGRAM FOR COLOR DISTRIBUTION
                  assign3 %>%
+                   na.omit(assign3) %>%
                      ggplot()+
                      geom_histogram(mapping = aes(x = as.numeric(real_quantity)),
-                                    bins = 100,
+                                    bins = 75,
                                     color = "black",
                                     fill = "black"
                                     ) +
                      labs(title = paste("Distribution of shipment sizes based on", "Textile Color"), x = "Textile quantity (singular shipment)") +
-                     xlim(0,5000)
-                     # facet_wrap(~(textile_color_arch)
+                     xlim(0,5000) +
+                     facet_wrap(~(textile_color_arch))
                   },
                  "Pattern" = {
                    
