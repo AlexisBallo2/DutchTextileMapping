@@ -51,13 +51,14 @@ for(i in 1:length(textile.data$textile_unit)){
 ##Modify Indian Guidlers to Guilders
 for(i in 1:length(assign3$shipment_currency)){ 
   if (assign3$shipment_currency[i] %in% c("Indian Guilders")){
-    assign3$real_guldens[i] <- as.numeric(assign3$total_value_guldens[i])*(10.5/15) #10.5 Dutch guilders = 15 Indian guilders
+    assign3$real_guldens[i] <- as.numeric(assign3$total_value_guldens[i])*(10.5/15)
   }
   else{
     assign3$real_guldens[i] <- as.numeric(assign3$total_value_guldens[i])
   }
 }
 
+#10.5 Dutch guilders = 15 Indian guilders
 
 ###Working on Units
 zzz<- assign3 %>%
@@ -114,7 +115,7 @@ for(i in 1:length(assign3$dest_loc_region)){
   }
 }
 
-#Ardra and Elmina only listed as Destination Ports (not regions)
+#Ardra and Elmina only listed as Destination Ports
 for(i in 1:length(assign3$dest_loc_port)){ 
   if (assign3$dest_loc_port[i] %in% c("Elmina")){ 
     assign3$dest_loc_region_arch[i] <- "Elmina"
@@ -151,7 +152,7 @@ for(i in 1:length(assign3$dest_loc_port_arch)){
 }
 
 
-q<- assign3 %>%  #investigate missing values
+q<- assign3 %>%
   filter(is.na(orig_loc_region_arch))
 
 # Change Guinea to Elmina
@@ -162,10 +163,10 @@ q<- assign3 %>%  #investigate missing values
 
 
 
-assign3 <- assign3 %>% #mutate a piece rate variable
+assign3 <- assign3 %>%
     mutate(piece_rate = as.numeric(real_guldens)/as.numeric(real_quantity))
 
-#####IF WE WANT TO ENCORPORATE SLAVE TRADE###########
+
 slavetrade.data <- read.csv("SlaveTrade.csv")
 
 
@@ -196,7 +197,7 @@ final.data <- temp.data %>%
     mutate(pct = textile_total/val) %>%
     mutate(text_is_worth_slaves = floor(pct*Total.embarked)) %>%
     mutate(exchange_rate = as.numeric(real_quantity)/text_is_worth_slaves) #gets ____ pieces of ___ per slave
-#######END SLAVE TRADE DATA LOAD################
+
 
 
 #Read in geojson files
@@ -364,7 +365,7 @@ dutchrep@data <- data.frame() %>%
 
 bantam@data <- data.frame() %>%
     add_column(Country = "Country") %>%
-    add_row(Country = "Java") ##Bantam... maybe could str replace but feeling lazy
+    add_row(Country = "Java")
 
 arguin@data <- data.frame() %>%
     add_column(Country = "Country") %>%
@@ -376,9 +377,9 @@ ardra@data <- data.frame() %>%
 
 #initial join
 ab <- raster::union(angola,arguin)
-ab <- raster::union(ab,ardra) 
+ab <- raster::union(ab,ardra) #Fix later
 ab <- raster::union(ab,arguin)
-ab <- raster::union(ab,bantam) #No error but not showing up on map??? Should be next to Batavia
+ab <- raster::union(ab,bantam)
 ab <- raster::union(ab,batavia)
 ab <- raster::union(ab,bengalE)
 ab <- raster::union(ab,capeTown)
@@ -416,30 +417,29 @@ ab@data <- ab@data %>%
 
 
 #For coloring the map if the user selects origin
-export_val <- assign3 %>%  #data frame grouped by origin port that calculates total value exported
+export_val <- assign3 %>%
     group_by(orig_loc_region_arch)%>%
     summarise(export.value = sum(real_guldens, na.rm  = TRUE))
-ab.origin <- ab #copy ab data frame to merge (from how Alex codes)
-ab.origin@data<- ab@data %>%  #join ab and export
+ab.origin <- ab
+ab.origin@data<- ab@data %>% 
     left_join(export_val, by = c("new.country" = "orig_loc_region_arch"), na.omit = TRUE)
-color <- colorNumeric(palette = "RdYlBu",   
+color <- colorNumeric(palette = "RdYlBu",
                       reverse = TRUE,
-                      domain = ab.origin@data$export.value) #creates new color for exports
+                      domain = ab.origin@data$export.value)
 
 #If user selects destination
-import_val <- assign3 %>%  #data frame for imports
+import_val <- assign3 %>%
     group_by(dest_loc_region_arch)%>%
     summarise(import.value = sum(real_guldens, na.rm  = TRUE))
-ab.dest <- ab.origin #copy data frame
-ab.dest@data<- ab.origin@data %>% #join origin and destination data
+ab.dest <- ab.origin
+ab.dest@data<- ab.origin@data %>% 
     left_join(import_val, by = c("new.country" = "dest_loc_region_arch"), na.omit = TRUE)
 color2 <- colorNumeric(palette = "RdYlBu",
                        reverse = TRUE,
-                      domain = ab.dest@data$import.value) #color for imports
+                      domain = ab.dest@data$import.value)
 
 
 
-<<<<<<< Updated upstream
 #Avoid tedious rewrites
 switch_func <- function(input,session){
   switch(input$inputChoice,
@@ -452,38 +452,6 @@ switch_func <- function(input,session){
                filter(orig_loc_region_arch == input$map_shape_click$id)
              updateSelectInput(session = session, inputId = "inputChoice_two", choices = c("All", unique(text_choices$textile_name)))
              
-=======
-#Avoid tedious rewrites- switches what user sees based on 
-#what they select in the initial dropdown (Textile Name, Origin, Destination, etc)
-switch_func <- function(input,session, passedmyLoc){
-  print(paste("switch function called with my Loc of ", passedmyLoc))
-    switch(input$inputChoice,  #If user selects Textile Name
-           "Textile Name" = {
-               text_choices <- assign3 %>%
-                 filter(orig_loc_region_arch == passedmyLoc)
-               
-               #null value means we DONT want to update the list 
-              updateSelectInput(session = session, 
-                                inputId = "inputChoice_two", 
-                                choices = c("All" = "All", unique(text_choices$textile_name)), #Will see button to select a textile
-                                selected = input$inputChoice_two) #, selected = myLoc)
-                
-
-             # }
-           },
-           
-           "Company (WIC/VOC)" = { #If user selects Company, will see a button to choose between companies
-               updateSelectInput(session = session, inputId = "inputChoice_two", choices = c("VOC","WIC", "Both")) 
-           },
-           "Origin" = { #If select Origin, nothing connected to this, so second button just Origin
-               updateSelectInput(session = session, inputId = "inputChoice_two", choices = c("Origin"))
-           },
-           "Destination" = { #If select Destination, nothing connected to this, so second button just Destination
-               updateSelectInput(session = session, inputId = "inputChoice_two", choices = c("Destination"))
-           },
-           "Year" = { #Will only see Year
-               updateSelectInput(session = session, inputId = "inputChoice_two", choices = c("Year"))
->>>>>>> Stashed changes
            }
          },
          
@@ -502,13 +470,9 @@ switch_func <- function(input,session, passedmyLoc){
   )
 }
 
-###TWO IDEAS:
-  #Connect Heat map for exports to "Textile Name" Button, and make a similar one for imports
-  #Bar graph of order quantities on color
 
 
 #Resets the map
-<<<<<<< Updated upstream
 reset_map <- function(output,input,location){
   
   output$map <- renderLeaflet({
@@ -552,65 +516,6 @@ reset_map <- function(output,input,location){
       )
       
       for(i in 1:nrow(maybe)){
-=======
-reset_map <- function(output,input,location){ 
-  
-    output$map <- renderLeaflet({ #main map that we call in the app
-      
-      print(paste(myLoc, "resetting map..."))
-        
-        return_graph <- ab.dest %>% 
-            leaflet() %>%
-          addProviderTiles("CartoDB.PositronNoLabels") %>% #fancy tiles
-            #addTiles %>% #boring tiles
-            addPolygons(color = "black",
-                        label = ~new.country,
-                        layerId = ab.dest@data$new.country,
-                        #popupId = ab.dest@data$import.value,  ##Want pop labels of import values
-                        opacity = 1,
-                        weight = 1,
-                        stroke = 1) %>%
-            setView(65.25,10, 2)
-   return_graph    #plots map example
-   
-   
-        #IF we have a location we want the lines of
-        if(!is_null(location)) {
-          #print(paste(myLoc,input$inputChoice_two))
-          mayb <- assign3 %>%
-            filter(orig_loc_region_arch == location & textile_name == input$inputChoice_two)
-          
-          maybe <- mayb[ , c("orig_loc_region_arch", "orig_loc_lat", "orig_loc_long", "dest_loc_port","dest_loc_lat", "dest_loc_long", "dest_loc_region_arch")]
-          
-          #adding exporting loc circle
-          return_graph <- addCircleMarkers(return_graph, 
-                           lat = ~maybe$orig_loc_lat,
-                           lng = ~maybe$orig_loc_long,
-                           label = ~maybe$orig_loc_region_arch,
-                           radius = 2,
-                           color = "red"
-          )
-          
-          #adding importing loc circle
-          return_graph <- addCircleMarkers(return_graph, 
-                                           lat = ~maybe$dest_loc_lat,
-                                           lng = ~maybe$dest_loc_long,
-                                           label = ~maybe$dest_loc_region_arch,
-                                           radius = 2,
-                                           color = "blue"
-          )
-          
-          for(i in 1:nrow(maybe)){
-            
-            return_graph <-  addPolylines(return_graph,
-                                   lat = as.numeric(maybe[i, c(2, 5)]),
-                                   lng = as.numeric(maybe[i, c(3, 6)]),
-                                   label = paste(myLoc, maybe$orig_loc_region_arch),
-                                   weight = 1,
-                                   color = "purple")
-            }
-        } 
->>>>>>> Stashed changes
         
         return_graph <-  addPolylines(return_graph,
                                       lat = as.numeric(maybe[i, c(2, 5)]),
@@ -641,7 +546,7 @@ ui <- fluidPage(
                                  textOutput(outputId = "selectedCountry")
                                  ),
                          selectInput(inputId = "inputChoice",
-                                     label = "Choose a Category!",
+                                     label = "Choose identifier!",
                                      choices = c("Textile Name", "Company (WIC/VOC)", "Origin", "Destination", "Year", "Modifiers")),
                          selectInput(inputId = "inputChoice_two",
                                      label = "Choose what you would like to graph!",
