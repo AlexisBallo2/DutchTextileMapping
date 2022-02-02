@@ -568,9 +568,13 @@ ui <- fluidPage(
                tags$div(class = "map",
                          leafletOutput(outputId = "map", width = "100%")
                ),
+               tags$div(class = "plots",
+                        plotlyOutput(outputId = "plot")
+                        ),
+               
         ),
       
-        plotlyOutput(outputId = "plot"),
+       
         leafletOutput(outputId = "dropdown"),
         verbatimTextOutput("selection")
 )
@@ -584,7 +588,6 @@ server <- function(input, output, session) {
       input$map_shape_click$id
     }
   })
-    #init the myLoc variable
     
     #the third dropdown with the textile names!!
     output$dropdown <- renderLeaflet({
@@ -628,9 +631,11 @@ server <- function(input, output, session) {
                            group_by(orig_loc_port_arch, textile_name) %>% 
                            filter(piece_rate < 20) %>% #For now, filtering by cheap pieces
                            filter(orig_loc_region_arch == input$map_shape_click$id) %>%
+
                            summarise(total_value = sum(real_guldens))%>%
                            ggplot()+
                            geom_tile(aes(x = orig_loc_port_arch, y= textile_name, fill = total_value))+
+
                            labs(title = paste("A chart of all exports from", input$map_shape_click$id, "ports") ,x = "Origin Port", y = "Textile") + 
                            guides(fill=guide_legend(title="Total Value Shipped")) +
                            scale_fill_gradient(low = "#460B2F", high = "#E36414", na.value = NA)
