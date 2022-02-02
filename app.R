@@ -472,12 +472,29 @@ switch_func <- function(input,session){
            if(is_null(input$map_shape_click$id)) {
              return()
            } else {
+             #Styling colors
+             # assign3$textile_color_arch = str_replace(assign3$textile_color_arch, "BROWN-BLUE", "BROWN BLUE")
+             # assign3$textile_color_arch = str_replace(assign3$textile_color_arch, "BLUE / AZURE", "BLUE")
              text_choices <- assign3 %>%
                filter(orig_loc_region_arch == input$map_shape_click$id)
              updateSelectInput(session = session, inputId = "inputChoice_two", choices = c("All", unique(text_choices$textile_color_arch)))
              
            }
+         },
+         "Pattern" = {
+           #this allows me to filter the data and only select textiles that are exported
+           if(is_null(input$map_shape_click$id)) {
+             return()
+           } else {
+             assign3$textile_color_arch = toupper(assign3$textile_pattern_arch)
+             assign3$textile_color_arch = str_replace(assign3$textile_color_arch, "STRIPES", "STRIPED")
+             text_choices <- assign3 %>%
+               filter(orig_loc_region_arch == input$map_shape_click$id)
+             updateSelectInput(session = session, inputId = "inputChoice_two", choices = c("All", unique(text_choices$textile_pattern_arch)))
+             
+           }
          }
+         
   )
 }
 
@@ -750,21 +767,20 @@ server <- function(input, output, session) {
             labs(title = paste("The quantity of", input$inputChoice_two, "from", input$map_shape_click$id, "exported by year"), x ="Year", y = "Total Quantity")
           
         }
-      
         } 
       else if(input$inputChoice_two %in% unique(assign3$textile_color_arch)) {
         reset_map(output,input, input$map_shape_click$id)
-        myDf <- assign3 %>%
+        data <- assign3 %>%
           filter(orig_loc_region_arch == input$map_shape_click$id)%>%
           filter(textile_color_arch == input$inputChoice_two)
-        print(paste("count: ", count(myDf)))
-        if(count(myDf) == 0) {
-          myDf <- data.frame(
+        print(paste("count: ", count(data)))
+        if(count(data) == 0) {
+          df <- data.frame(
             label=c("No available data"),
             x = c(1.5), y =c(1.5))
           ggplot(df, aes(x=x, y=y, label=label)) + geom_text(mapping = aes(x = x, y = y), size = 10)
         } else {
-          data() %>%
+          data %>%
             ggplot()+
             geom_histogram(mapping = aes(x = as.numeric(real_quantity)),
                            bins = 75,
@@ -775,7 +791,31 @@ server <- function(input, output, session) {
             xlim(0,5000)
           
         }
-      }else {
+      }else if(input$inputChoice_two %in% unique(assign3$textile_pattern_arch)) {
+        reset_map(output,input, input$map_shape_click$id)
+        data <- assign3 %>%
+          filter(orig_loc_region_arch == input$map_shape_click$id)%>%
+          filter(textile_pattern_arch == input$inputChoice_two)
+        print(paste("count: ", count(data)))
+        if(count(data) == 0) {
+          df <- data.frame(
+            label=c("No available data"),
+            x = c(1.5), y =c(1.5))
+          ggplot(df, aes(x=x, y=y, label=label)) + geom_text(mapping = aes(x = x, y = y), size = 10)
+        } else {
+          data %>%
+            ggplot()+
+            geom_histogram(mapping = aes(x = as.numeric(real_quantity)),
+                           bins = 75,
+                           color = "black",
+                           fill = "black"
+            ) +
+            labs(title = paste("Distribution of shipment sizes based on", input$inputChoice_two, "from", input$map_shape_click$id), x = "Textile quantity (singular shipment)") +
+            xlim(0,5000)
+          
+        }
+      }
+      else {
           switch(input$inputChoice_two,
                    "All" = {
                        #Change graph back to normal
@@ -915,37 +955,8 @@ server <- function(input, output, session) {
                        labs(title = "Total Quantity of All Textiles Shipped", x = "Year", y = "Textile Quantity") +
                        scale_fill_manual(values=c("#FB8B24"))
                      }
-                   },
-                  "Color" = {
-                   reset_map(output,input, NULL)
-                    
-                    assign3$textile_color_arch = toupper(assign3$textile_color_arch)
-                    assign3$textile_color_arch = str_replace(assign3$textile_color_arch, "BROWN-BLUE", "BROWN BLUE")
-                    assign3$textile_color_arch = str_replace(assign3$textile_color_arch, "BLUE / AZURE", "BLUE")
-                   
-                   #HISTOGRAM FOR COLOR DISTRIBUTION
-                 assign3 %>%
-                   na.omit(assign3) %>%
-                     ggplot()+
-                     geom_histogram(mapping = aes(x = as.numeric(real_quantity)),
-                                    bins = 75,
-                                    color = "black",
-                                    fill = "black"
-                                    ) +
-                     labs(title = paste("Distribution of shipment sizes based on", "Textile Color"), x = "Textile quantity (singular shipment)") +
-                     xlim(0,5000) +
-                     facet_wrap(~(textile_color_arch))
-                  },
-                 "Pattern" = {
-                   
-                 }, 
-                 {
-                df <- data.frame(
-                label=c("No available data"),
-                x = c(1.5), y =c(1.5))
-                g <- ggplot(df, aes(x=x, y=y, label=label)) + geom_text(mapping = aes(x = x, y = y), size = 10)
-                ggplotly(g)
-              }
+                   }
+                 
           )}
     
     })
