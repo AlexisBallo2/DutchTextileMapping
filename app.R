@@ -443,7 +443,7 @@ color2 <- colorNumeric(palette = "RdYlBu",
 #Avoid tedious rewrites
 switch_func <- function(input,session){
   switch(input$inputChoice,
-         "Textile Name" = {
+         "Export Data" = {
            #this allows me to filter the data and only select textiles that are exported
            if(is_null(input$map_shape_click$id)) {
              return()
@@ -696,7 +696,7 @@ ui <- fluidPage(
                         tags$div(class = "inlineOptions",
                                  selectInput(inputId = "inputChoice",
                                              label = "Choose identifier!",
-                                             choices = c("Textile Name", "Company (WIC/VOC)", "Origin", "Destination", "Year", "Color", "Pattern"))
+                                             choices = c("Export Data", "Company (WIC/VOC)", "Origin", "Destination", "Year", "Color", "Pattern"))
                                  ),
                         tags$div(class = "inlineOptions",
                                  selectInput(inputId = "inputChoice_two",
