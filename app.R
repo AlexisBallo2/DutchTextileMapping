@@ -528,7 +528,7 @@ reset_map <- function(output,input,location){
                                        lng = ~maybe$dest_loc_long,
                                        label = ~maybe$dest_loc_region_arch,
                                        radius = 2,
-                                       color = "blue"
+                                       color = "blue" 
       )
       
       for(i in 1:nrow(maybe)){
@@ -538,7 +538,13 @@ reset_map <- function(output,input,location){
                                       lng = as.numeric(maybe[i, c(3, 6)]),
                                       label = paste(input$map_shape_click$id, maybe$orig_loc_region_arch),
                                       weight = 1,
-                                      color = "purple")
+                                      color = "purple") %>%
+                          addLegend("bottomleft",colors = c("red", "blue"), labels = c("Sent", "Recieved"),
+                                    title = " ",
+                                    na.label = "No Exports",
+                                    labFormat = labelFormat(suffix = "g"),
+                                    opacity = 1
+          ) 
       }
     } 
     
@@ -550,7 +556,7 @@ origin_map<- function(input,output,session){
   
   output$map <- renderLeaflet({
     
-    print(paste(input$map_shape_click$id, "origin map"))
+    #print(input$map_shape_click$id)
 
     switch_func(input,session)
 
@@ -566,12 +572,15 @@ origin_map<- function(input,output,session){
                     opacity = 1,
                     weight = 1,
                     stroke = 1) %>%
-        setView(55.25,0, 3)  %>% #Sets view to center
-        addLegend("topright", pal = color, values = ~export.value,
+                    
+      setView(60.25,-10, 2)  %>% #Sets view to center
+        addLegend("bottomleft", pal = color, values = ~export.value,
                   title = "Total Value (Guldens) Exported",
                   na.label = "No Exports",
                   labFormat = labelFormat(suffix = "g"),
-                  opacity = 1)
+                  opacity = 1
+        ) 
+  
     
     return_graph
     
@@ -620,8 +629,8 @@ destination_map<- function(input,output,session){
                     opacity = 1,
                     weight = 1,
                     stroke = 1) %>%
-        setView(55.25,0, 3) %>% #Sets view to center
-        addLegend("topright", pal = color2, values = ~import.value,
+        setView(60.25,-10, 2) %>% #Sets view to center
+        addLegend("bottomleft", pal = color2, values = ~import.value,
                   title = "Total Value (Guldens) Imported",
                   na.label = "No Imports",
                   labFormat = labelFormat(suffix = "g"),
@@ -702,9 +711,10 @@ server <- function(input, output, session) {
     })
     
     reset_map(output,input, NULL)
-    
     #the bottom plots
     output$plot <- renderPlotly({
+      print(input$map_shape_click)
+      
       
       
       if(is.null(input$map_shape_click$id)){
@@ -842,6 +852,27 @@ server <- function(input, output, session) {
                    "Origin" = {
                       
                          origin_map(input,output,session)
+                          #print(input$map_shape_click)
+                          if(is_null(input$map_shape_click$id)) {
+                            return()
+                          } else {
+                            g<- assign3 %>% 
+                              group_by(orig_loc_port_arch, textile_name) %>% 
+                              filter(piece_rate < 20) %>% #For now, filtering by cheap pieces
+                              filter(orig_loc_region_arch == input$map_shape_click$id) %>%
+                              summarise(total_value = sum(real_guldens))%>%
+                              ggplot()+
+                              geom_tile(aes(x = orig_loc_port_arch, y= textile_name, fill = total_value))+
+                              
+                              labs(title = paste("A chart of all exports from", input$map_shape_click$id, "ports") ,x = "Origin Port", y = "Textile") + 
+                              guides(fill=guide_legend(title="Mean Value per Piece")) +
+                              scale_fill_gradient(low = "#460B2F", high = "#E36414", na.value = NA) +
+                              theme(plot.title = element_text(size = 10),
+                                    axis.title.x = element_text(size = 10),  
+                                    axis.title.y = element_text(size = 10)) 
+                            
+                            ggplotly(g)
+                          }
                       }
                    ,
                    
@@ -849,6 +880,26 @@ server <- function(input, output, session) {
                    "Destination" = {
                        
                         destination_map(input,output,session)
+                        # 
+                        # if(is_null(input$map_shape_mouseout$id)) {
+                        #   return()
+                        # } else {
+                        #   g<- assign3 %>% 
+                        #     group_by(dest_loc_port_arch, textile_name) %>% 
+                        #     filter(piece_rate < 20) %>% #For now, filtering by cheap pieces
+                        #     filter(dest_loc_region_arch == input$map_shape_mouseout$id) %>%
+                        #     summarise(total_value = sum(real_guldens))%>%
+                        #     ggplot()+
+                        #     geom_tile(aes(x = dest_loc_port_arch, y= textile_name, fill = total_value))+
+                        #     labs(title = paste("A chart of all imports to", input$map_shape_mouseout$id, "ports") ,x = "Origin Port", y = "Textile") + 
+                        #     guides(fill=guide_legend(title="Mean Value per Piece")) +
+                        #     scale_fill_gradient(low = "#460B2F", high = "#E36414", na.value = NA) +
+                        #     theme(plot.title = element_text(size = 10),
+                        #           axis.title.x = element_text(size = 10),  
+                        #           axis.title.y = element_text(size = 10)) 
+                        #   
+                        #   ggplotly(g)
+                        # }
                        
                        },
                    
@@ -907,11 +958,11 @@ server <- function(input, output, session) {
                    
                  }, 
                  {
-                df <- data.frame(
-                label=c("No available data"),
-                x = c(1.5), y =c(1.5))
-                g <- ggplot(df, aes(x=x, y=y, label=label)) + geom_text(mapping = aes(x = x, y = y), size = 10)
-                ggplotly(g)
+                  df <- data.frame(
+                  label=c("No available data"),
+                  x = c(1.5), y =c(1.5))
+                  g <- ggplot(df, aes(x=x, y=y, label=label)) + geom_text(mapping = aes(x = x, y = y), size = 10)
+                  ggplotly(g)
               }
           )}
     
