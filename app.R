@@ -466,6 +466,9 @@ switch_func <- function(input,session){
          },
          "Year" = {
            updateSelectInput(session = session, inputId = "inputChoice_two", choices = c("Year"))
+         },
+         "Modifiers" = {
+           updateSelectInput(session = session, inputId = "inputChoice_two", choices = c("Color","Pattern"))
          }
   )
 }
