@@ -735,14 +735,14 @@ server <- function(input, output, session) {
                                addPolygons(color = "black",
                                            label = ~new.country,
                                            layerId = ab.dest@data$new.country,
-                                           fillColor = ~color(import.value),
+                                           fillColor = ~color2(import.value),
                                            popup = ~import.value,
                                            fillOpacity = 1,
                                            opacity = 1,
                                            weight = 1,
                                            stroke = 1) %>%
                                setView(55.25,0, 3) %>% #Sets view to center
-                               addLegend("topright", pal = color, values = ~import.value,
+                               addLegend("topright", pal = color2, values = ~import.value,
                                          title = "Total Value (Guldens) Imported",
                                          na.label = "No Imports",
                                          labFormat = labelFormat(suffix = "g"),
