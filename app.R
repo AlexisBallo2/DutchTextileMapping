@@ -571,7 +571,6 @@ server <- function(input, output, session) {
       input$map_shape_click$id
     }
   })
-    #init the myLoc variable
     
     #the third dropdown with the textile names!!
     output$dropdown <- renderLeaflet({
