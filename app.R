@@ -379,7 +379,7 @@ ardra@data <- data.frame() %>%
 ab <- raster::union(angola,arguin)
 ab <- raster::union(ab,ardra) #Fix later
 ab <- raster::union(ab,arguin)
-ab <- raster:: union(ab, bantam)
+ab <- raster::union(ab,bantam)
 ab <- raster::union(ab,batavia)
 ab <- raster::union(ab,bengalE)
 ab <- raster::union(ab,capeTown)
@@ -391,7 +391,7 @@ ab <- raster::union(ab,dutchrep)
 ab <- raster::union(ab,elmina)
 ab <- raster::union(ab,jambi)
 ab <- raster::union(ab,japan)
-#ab <- raster::union(ab,northeastJava) #/// #problems with geojson
+# ab <- raster::union(ab,northeastJava)/// #problems with geojson
 ab <- raster::union(ab,eastJava)
 ab <- raster::union(ab,makassar)
 ab <- raster::union(ab,malabar)
@@ -443,26 +443,13 @@ color2 <- colorNumeric(palette = "RdYlBu",
 #Avoid tedious rewrites
 switch_func <- function(input,session){
   switch(input$inputChoice,
-         "Export Data" = {
+         "Textile Name" = {
            #this allows me to filter the data and only select textiles that are exported
            if(is_null(input$map_shape_click$id)) {
              return()
            } else {
              text_choices <- assign3 %>%
                filter(orig_loc_region_arch == input$map_shape_click$id)
-             updateSelectInput(session = session, inputId = "inputChoice_two", choices = c("All", unique(text_choices$textile_name)))
-             
-           }
-         },
-         
-         
-         "Import Data" = {
-           #this allows me to filter the data and only select textiles that are exported
-           if(is_null(input$map_shape_click$id)) {
-             return()
-           } else {
-             text_choices <- assign3 %>%
-               filter(dest_loc_region_arch == input$map_shape_click$id)
              updateSelectInput(session = session, inputId = "inputChoice_two", choices = c("All", unique(text_choices$textile_name)))
              
            }
@@ -543,6 +530,100 @@ reset_map <- function(output,input,location){
   })
 }
 
+origin_map<- function(input,output,session){
+  
+  output$map <- renderLeaflet({
+    
+    print(paste(input$map_shape_click$id, "origin map"))
+
+    switch_func(input,session)
+
+    return_graph <- ab.origin %>%
+        leaflet() %>%
+        addTiles %>%
+        addPolygons(color = "black",
+                    label = ~new.country,
+                    layerId = ab.origin@data$new.country,
+                    fillColor = ~color(export.value),
+                    popup = ~export.value,
+                    fillOpacity = 1,
+                    opacity = 1,
+                    weight = 1,
+                    stroke = 1) %>%
+        setView(55.25,0, 3)  %>% #Sets view to center
+        addLegend("topright", pal = color, values = ~export.value,
+                  title = "Total Value (Guldens) Exported",
+                  na.label = "No Exports",
+                  labFormat = labelFormat(suffix = "g"),
+                  opacity = 1)
+    
+    return_graph
+    
+  
+  })
+  
+  g<- assign3 %>% 
+    group_by(orig_loc_port_arch, textile_name) %>% 
+    filter(piece_rate < 20) %>% #For now, filtering by cheap pieces
+    filter(orig_loc_region_arch == input$map_shape_click$id) %>%
+    summarise(mean_value = mean(piece_rate))%>%
+    ggplot()+
+    geom_tile(aes(x = orig_loc_port_arch, y= textile_name, fill = mean_value))+
+    labs(title = paste("A chart of all exports from", input$map_shape_click$id, "ports") ,x = "Origin Port", y = "Textile") + 
+    guides(fill=guide_legend(title="Mean Value per Piece")) +
+    scale_fill_gradient(low = "#460B2F", high = "#E36414", na.value = NA)
+  
+  ggplotly(g)
+  
+}
+
+destination_map<- function(input,output,session){
+    
+    output$map <- renderLeaflet({
+      
+      print(paste(input$map_shape_click$id, "destination"))
+      
+      switch_func(input,session)
+      
+      return_graph <- ab.dest %>%
+        leaflet() %>%
+        addTiles %>%
+        addPolygons(color = "black",
+                    label = ~new.country,
+                    layerId = ab.dest@data$new.country,
+                    fillColor = ~color2(import.value),
+                    popup = ~import.value,
+                    fillOpacity = 1,
+                    opacity = 1,
+                    weight = 1,
+                    stroke = 1) %>%
+        setView(55.25,0, 3) %>% #Sets view to center
+        addLegend("topright", pal = color2, values = ~import.value,
+                  title = "Total Value (Guldens) Imported",
+                  na.label = "No Imports",
+                  labFormat = labelFormat(suffix = "g"),
+                  opacity = 1)
+    
+      return_graph
+    
+    
+  })
+  
+  g<- assign3 %>% 
+    group_by(orig_loc_port_arch, textile_name) %>% 
+    filter(piece_rate < 20) %>% #For now, filtering by cheap pieces
+    filter(orig_loc_region_arch == input$map_shape_click$id) %>%
+    summarise(mean_value = mean(piece_rate))%>%
+    ggplot()+
+    geom_tile(aes(x = orig_loc_port_arch, y= textile_name, fill = mean_value))+
+    labs(title = paste("A chart of all exports from", input$map_shape_click$id, "ports") ,x = "Origin Port", y = "Textile") + 
+    guides(fill=guide_legend(title="Mean Value per Piece")) +
+    scale_fill_gradient(low = "#460B2F", high = "#E36414", na.value = NA)
+  
+  ggplotly(g)
+  
+}
+
 
 #Map, selection bar, graphs (high-> low)
 ui <- fluidPage(
@@ -560,7 +641,7 @@ ui <- fluidPage(
                                  ),
                          selectInput(inputId = "inputChoice",
                                      label = "Choose identifier!",
-                                     choices = c("Export Data", "Company (WIC/VOC)", "Origin", "Destination", "Year", "Modifiers", "Import Data")),
+                                     choices = c("Textile Name", "Company (WIC/VOC)", "Origin", "Destination", "Year", "Modifiers")),
                          selectInput(inputId = "inputChoice_two",
                                      label = "Choose what you would like to graph!",
                                      choices = NULL),
@@ -643,32 +724,24 @@ server <- function(input, output, session) {
                        #Change graph back to normal
                         reset_map(output,input, NULL)
                      
-                  myframe <- assign3 %>% 
-                    group_by(orig_loc_port_arch, textile_name) %>% 
-                    filter(piece_rate < 20) %>% #For now, filtering by cheap pieces
-                    filter(orig_loc_region_arch == input$map_shape_click$id) %>%
-                    summarise(mean_value = mean(piece_rate))
-                  print(paste("is empty? ", (dim(myframe))))
-                  if(dim(myframe) == 0) {
-                    df <- data.frame(
-                      label=c("No available data"),
-                      x = c(1.5), y =c(1.5))
-                    ggplot(df, aes(x=x, y=y, label=label)) + geom_text(mapping = aes(x = x, y = y), size = 10)
-                    
-                  } else {
-                   g<- myframe %>%
-                            ggplot()+
-                           geom_tile(aes(x = orig_loc_port_arch, y= textile_name, fill = mean_value))+
+
+                       
+                   g<- assign3 %>% 
+                           group_by(orig_loc_port_arch, textile_name) %>% 
+                           filter(piece_rate < 20) %>% #For now, filtering by cheap pieces
+                           filter(orig_loc_region_arch == input$map_shape_click$id) %>%
+                           summarise(total_value = sum(real_guldens))%>%
+                           ggplot()+
+                           geom_tile(aes(x = orig_loc_port_arch, y= textile_name, fill = total_value))+
+
                            labs(title = paste("A chart of all exports from", input$map_shape_click$id, "ports") ,x = "Origin Port", y = "Textile") + 
-                           guides(fill=guide_legend(title="Total Value Shipped")) +
+                           guides(fill=guide_legend(title="Mean Value per Piece")) +
                            scale_fill_gradient(low = "#460B2F", high = "#E36414", na.value = NA)
-                    
-                   
 
                    ggplotly(g)
                    
-                  }
-                
+
+                   
                    },
 
 
@@ -734,65 +807,18 @@ server <- function(input, output, session) {
                             labs(title = paste("Quanity of Textiles Shipped out of",input$map_shape_click$id ,"by the", input$inputChoice_two, "Company"), x ="Year", y = "Total Quantity")
                      }  
                    },
-
+                   
                    
                    "Origin" = {
-                       output$map <- renderLeaflet({
-                           
-                           print(paste(input$map_shape_click$id, "origin map"))
-                           
-                           switch_func(input,session)
-                           
-                           ab.origin %>%
-                               leaflet() %>%
-                               addTiles %>%
-                               addPolygons(color = "black",
-                                           label = ~new.country,
-                                           layerId = ab.origin@data$new.country,
-                                           fillColor = ~color(export.value),
-                                           popup = ~export.value,
-                                           fillOpacity = 1,
-                                           opacity = 1,
-                                           weight = 1,
-                                           stroke = 1) %>%
-                               setView(55.25,0, 3)  %>% #Sets view to center
-                               addLegend("topright", pal = color, values = ~export.value,
-                                         title = "Total Value (Guldens) Exported",
-                                         na.label = "No Exports",
-                                         labFormat = labelFormat(suffix = "g"),
-                                         opacity = 1)
-                           
-                       })
-                   }
+                      
+                         origin_map(input,output,session)
+                      }
                    ,
                    
                    
                    "Destination" = {
-                       output$map <- renderLeaflet({
-                           
-                           print(paste(input$map_shape_click$id, "destination"))
-                           
-                           #switch_func(input,session, NULL)
-                           
-                           ab.dest %>%
-                               leaflet() %>%
-                               addTiles %>%
-                               addPolygons(color = "black",
-                                           label = ~new.country,
-                                           layerId = ab.dest@data$new.country,
-                                           fillColor = ~color2(import.value),
-                                           popup = ~import.value,
-                                           fillOpacity = 1,
-                                           opacity = 1,
-                                           weight = 1,
-                                           stroke = 1) %>%
-                               setView(55.25,0, 3) %>% #Sets view to center
-                               addLegend("topright", pal = color2, values = ~import.value,
-                                         title = "Total Value (Guldens) Imported",
-                                         na.label = "No Imports",
-                                         labFormat = labelFormat(suffix = "g"),
-                                         opacity = 1)
-                       })
+                       
+                      destination_map(input,output,session)
                        
                        },
                    
