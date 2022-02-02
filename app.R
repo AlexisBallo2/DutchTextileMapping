@@ -884,30 +884,38 @@ server <- function(input, output, session) {
                        scale_fill_manual(values=c("#FB8B24"))
                      }
                    },
-                  "Modifiers" = {
+                  "Color" = {
                    reset_map(output,input, NULL)
+                    
+                    assign3$textile_color_arch = toupper(assign3$textile_color_arch)
+                    assign3$textile_color_arch = str_replace(assign3$textile_color_arch, "BROWN-BLUE", "BROWN BLUE")
+                    assign3$textile_color_arch = str_replace(assign3$textile_color_arch, "BLUE / AZURE", "BLUE")
                    
                    #HISTOGRAM FOR COLOR DISTRIBUTION
-                   assign3 %>%
-                     filter(textile_color_arch == "black") %>%
+                 assign3 %>%
                      ggplot()+
                      geom_histogram(mapping = aes(x = as.numeric(real_quantity)),
-                                    bins = 30,
+                                    bins = 100,
                                     color = "black",
-                                    fill = "black") +
-                     labs(title = paste("Distribution of shipment sizes based on", "Textile Color"), x = "Textile quantity (singular shipment)")
-                 },
+                                    fill = "black"
+                                    ) +
+                     labs(title = paste("Distribution of shipment sizes based on", "Textile Color"), x = "Textile quantity (singular shipment)") +
+                     xlim(0,5000)
+                     # facet_wrap(~(textile_color_arch)
+                  },
+                 "Pattern" = {
+                   
+                 }, 
                  {
-                 df <- data.frame(
-                   label=c("No available data"),
-                   x = c(1.5), y =c(1.5))
-                 g <- ggplot(df, aes(x=x, y=y, label=label)) + geom_text(mapping = aes(x = x, y = y), size = 10)
-                 ggplotly(g)
-                 }
-                 )
-        }
-    })
+                df <- data.frame(
+                label=c("No available data"),
+                x = c(1.5), y =c(1.5))
+                g <- ggplot(df, aes(x=x, y=y, label=label)) + geom_text(mapping = aes(x = x, y = y), size = 10)
+                ggplotly(g)
+              }
+          )}
     
+    })
 }
 #live loading of shiny app
 options(shiny.reactlog= TRUE)
