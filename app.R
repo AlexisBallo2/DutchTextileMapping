@@ -756,7 +756,12 @@ server <- function(input, output, session) {
 
                            labs(title = paste("A chart of all exports from", input$map_shape_click$id, "ports") ,x = "Origin Port", y = "Textile") + 
                            guides(fill=guide_legend(title="Mean Value per Piece")) +
-                           scale_fill_gradient(low = "#460B2F", high = "#E36414", na.value = NA)
+                           scale_fill_gradient(low = "#460B2F", high = "#E36414", na.value = NA) +
+                            theme(plot.title = element_text(size = 10),
+                                  axis.title.x = element_text(size = 10),  
+                                  axis.title.y = element_text(size = 10)  
+                                  ) 
+
 
                    ggplotly(g)
                    

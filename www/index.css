@@ -14,7 +14,7 @@ h2 {
   text-align: center;
   background-color:lightgrey;
   margin:0;
-  padding:30px;
+  padding:20px;
   margin-bottom: 30px;
   border-bottom: 2px solid black;
   border-top: 2px solid black;
@@ -23,7 +23,7 @@ h2 {
 
 .map {
   display:inline-block;
- width:60%;
+ width:50%;
  height: 500px;
 }
 
@@ -43,7 +43,7 @@ div.container > * {
 
 
 .plots {
-  width:30%;
+  width:40%;
   height: 500px;
   padding:0px;
   display:inline-block;
