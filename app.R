@@ -555,9 +555,13 @@ ui <- fluidPage(
                tags$div(class = "map",
                          leafletOutput(outputId = "map", width = "100%")
                ),
+               tags$div(class = "plots",
+                        plotlyOutput(outputId = "plot")
+                        ),
+               
         ),
       
-        plotlyOutput(outputId = "plot"),
+       
         leafletOutput(outputId = "dropdown"),
         verbatimTextOutput("selection")
 )
@@ -615,7 +619,7 @@ server <- function(input, output, session) {
                            filter(piece_rate < 20) %>% #For now, filtering by cheap pieces
                            filter(orig_loc_region_arch == input$map_shape_click$id) %>%
                            summarise(mean_value = mean(piece_rate))%>%
-                           ggplot()+
+                            ggplot()+
                            geom_tile(aes(x = orig_loc_port_arch, y= textile_name, fill = mean_value))+
                            labs(title = paste("A chart of all exports from", input$map_shape_click$id, "ports") ,x = "Origin Port", y = "Textile") + 
                            guides(fill=guide_legend(title="Mean Value per Piece")) +

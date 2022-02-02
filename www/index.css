@@ -25,30 +25,44 @@ h2 {
 }
 
 .map {
- width:60%;
- margin:10px;
- margin-right: 10%;
-float:right;
-display:inline;
+  display:inline-block;
+ width:40%;
+  
 
+
+}
+div.container > * {
+    padding-left: 1%;
+    padding-right: 1%
 }
 
 .container {
   width:100%;
-  padding: 100px;
-  position:relative;
+
+  text-align: center;
+
 }
 
+/*
+#plot {
+  display: inline-block;
+  width:100%;
+}
+*/ 
 
+.plots {
+  width:40%;
+    display: inline-block;
+    border:1px solid black;
+}
+  
 .options {
-  width: 200px;
-  margin:10px;
-  float:left;
-  display:inline;
-  position: absolute;
-  top: 50%;
-  -ms-transform: translateY(-50%);
-  transform: translateY(-50%);
+  width:10%;
+  height: 100%;
+  display: inline-block;
+  margin-bottom: auto;
+  margin-top: auto;
+  padding:0;
 
 }
 
@@ -64,4 +78,7 @@ display:inline;
   margin-bottom: 10px;
 }
 
+.secCountry {
+  margin-bottom: 20px;
+}
 
