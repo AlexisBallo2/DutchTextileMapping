@@ -14,73 +14,75 @@ h2 {
   text-align: center;
   background-color:lightgrey;
   margin:0;
-  padding:30px;
+  padding:20px;
   margin-bottom: 30px;
   border-bottom: 2px solid black;
   border-top: 2px solid black;
 }
 
-.mapdiv {
-  /*width:500px; */
-}
 
 .map {
   display:inline-block;
- width:40%;
-  
+ width:50%;
+ height: 500px;
+}
 
-
+#map {
+  border: 1px solid black;
 }
 div.container > * {
-    margin-left: ;-left: 1%;
-    margin-right: 1%;
-    height: 100%;
+    margin:10px;
     
 }
 
 .container {
   width:100%;
-
   text-align: center;
 
 }
 
-/*
-#plot {
-  display: inline-block;
-  width:100%;
-}
-*/ 
 
 .plots {
   width:40%;
+  height: 500px;
   padding:0px;
-    display: inline-block;
-    border:1px solid black;
+  display:inline-block;
+  border:1px solid black;
 }
   
+div.options > * {
+  margin-left:10px;
+  margin-right:10px;
+}
 .options {
-  width:10%;
-  height: 100%;
-  display: inline-block;
-
+  text-align: center;
+  justify-content: center;
+  display: flex;
   padding:0;
 
 }
 
-.inorderul li {
-}
-
-.inorderulLi {
-    width:100px;
-    height:100px;
-}
 
 .selected{
-  margin-bottom: 10px;
 }
 
-.secCountry {
-  margin-bottom: 20px;
+.inlineOptions {
+  display:inline-block;
 }
 
+#selectedCountry {
+  height: 34px;
+  width: 300px;
+  text-align: center;
+  justify-content: center;
+ background-color: white;
+  border: 1px solid #cccccc;
+  padding: 6px 12px;
+  display: inline-block;
+  width: 100%;
+  overflow: hidden;
+  position: relative;
+  z-index: 1;
+  
+  
+}
