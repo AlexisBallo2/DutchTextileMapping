@@ -567,7 +567,6 @@ ui <- fluidPage(
 )
 
 server <- function(input, output, session) {
-    
   output$selectedCountry <- renderText({
     if(is_null(input$map_shape_click$id)) {
       "Please Select a Location"
@@ -588,37 +587,63 @@ server <- function(input, output, session) {
       
       
       if(is.null(input$map_shape_click$id)){
-        return()
+        
+        #something to show before a location is clicked
+        #not workign yet...
+        print("here still")
+        df <- data.frame(
+          label=c("No available data"),
+          x = c(1.5), y =c(1.5))
+        g <- ggplot(df, aes(x=x, y=y, label=label)) + geom_text(mapping = aes(x = x, y = y), size = 10)
+        ggplotly(g)
         # Graph of textile name and the value that was sent, filled with something(quantity?)
+        
+        
+        
       }
-
-      
       #if the input is a textile... graph it
       if(input$inputChoice_two %in% unique(assign3$textile_name)) {
         print("x here")
         reset_map(output,input, input$map_shape_click$id)
-      
-        assign3 %>%
+        data <-  assign3 %>%
           filter(orig_loc_region_arch == input$map_shape_click$id)%>%
-           filter(textile_name == input$inputChoice_two ) %>%
-              ggplot() +
-              geom_col(aes(x = dest_yr, y = as.numeric(real_quantity)),
-                       fill = "#FB8B24") +
-              theme_bw() +
-              labs(title = paste("The quantity of", input$inputChoice_two, "from", input$map_shape_click$id, "exported by year"), x ="Year", y = "Total Quantity")
-
+          filter(textile_name == input$inputChoice_two )
+        print(paste("count: ", count(data)))
+        if(count(data) == 0) {
+          df <- data.frame(
+            label=c("No available data"),
+            x = c(1.5), y =c(1.5))
+          ggplot(df, aes(x=x, y=y, label=label)) + geom_text(mapping = aes(x = x, y = y), size = 10)
+        } else {
+          data %>%
+            ggplot() +
+            geom_col(aes(x = dest_yr, y = as.numeric(real_quantity)),
+                     fill = "#FB8B24") +
+            theme_bw() +
+            labs(title = paste("The quantity of", input$inputChoice_two, "from", input$map_shape_click$id, "exported by year"), x ="Year", y = "Total Quantity")
+          
+        }
+      
         } else {
           switch(input$inputChoice_two,
                    "All" = {
                        #Change graph back to normal
                         reset_map(output,input, NULL)
                      
-                       
-                   g<- assign3 %>% 
-                           group_by(orig_loc_port_arch, textile_name) %>% 
-                           filter(piece_rate < 20) %>% #For now, filtering by cheap pieces
-                           filter(orig_loc_region_arch == input$map_shape_click$id) %>%
-                           summarise(mean_value = mean(piece_rate))%>%
+                  myframe <- assign3 %>% 
+                    group_by(orig_loc_port_arch, textile_name) %>% 
+                    filter(piece_rate < 20) %>% #For now, filtering by cheap pieces
+                    filter(orig_loc_region_arch == input$map_shape_click$id) %>%
+                    summarise(mean_value = mean(piece_rate))
+                  print(paste("is empty? ", (dim(myframe))))
+                  if(dim(myframe) == 0) {
+                    df <- data.frame(
+                      label=c("No available data"),
+                      x = c(1.5), y =c(1.5))
+                    ggplot(df, aes(x=x, y=y, label=label)) + geom_text(mapping = aes(x = x, y = y), size = 10)
+                    
+                  } else {
+                   g<- myframe %>%
                             ggplot()+
                            geom_tile(aes(x = orig_loc_port_arch, y= textile_name, fill = mean_value))+
                            labs(title = paste("A chart of all exports from", input$map_shape_click$id, "ports") ,x = "Origin Port", y = "Textile") + 
@@ -627,7 +652,8 @@ server <- function(input, output, session) {
 
                    ggplotly(g)
                    
-                   
+                  }
+                
                    },
 
                    "Both" ={
