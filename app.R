@@ -703,7 +703,7 @@ server <- function(input, output, session) {
                          geom_col(aes(x = dest_yr, y = as.numeric(real_quantity)),
                                   fill = "#FB8B24") +
                          theme_bw() +
-                         labs(title = paste("Quanity of Textiles Shipped out of",input$map_shape_click$id ,"by the", input$inputChoice_two, "Company"), x ="Year", y = "Total Quantity")
+                         labs(title = paste("Quanity of Textiles Shipped out of",input$map_shape_click$id ,"by the", input$inputChoice_two, "Company"), x ="Year", y = "Total Quantity") 
                        
                      }
                        
