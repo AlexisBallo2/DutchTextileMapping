@@ -540,11 +540,11 @@ ui <- fluidPage(
   titlePanel("Dutch Textile Trade"),
       tags$div(class = "container", 
                tags$div(class = "options", 
-                        # selectInput(inputId = "location",
-                        #             label = "Choose Location",
-                        #             choices = c("All" = " ", unique(assign3$orig_loc_region_arch))
-                        #          ),
-                        textOutput(outputId = "selectedCountry"),
+                        tags$div(class = "secCountry",
+                                 tags$label("Selected Country: "),
+                                  
+                                 textOutput(outputId = "selectedCountry")
+                                 ),
                          selectInput(inputId = "inputChoice",
                                      label = "Choose identifier!",
                                      choices = c("Textile Name", "Company (WIC/VOC)", "Origin", "Destination", "Year", "Modifiers")),
@@ -588,21 +588,9 @@ server <- function(input, output, session) {
         return()
         # Graph of textile name and the value that was sent, filled with something(quantity?)
       }
-      
-      #Conditionals based on user input from the drop down menu
-      #if no choice is selected for textile 
-      #text_choices <- assign3 %>%
-       # filter(orig_loc_region_arch == input$map_shape_click$id)
-      
-      #updateSelectInput(inputId = "inputChoice_two", choices = c("All" = "All", unique(text_choices$textile_name)))
-
-      #print(input$inputChoice_two)
-      
-      #Conditionals based on user input from the drop down menu
 
       
       #if the input is a textile... graph it
-      #switch_func(input, session)
       if(input$inputChoice_two %in% unique(assign3$textile_name)) {
         print("x here")
         reset_map(output,input, input$map_shape_click$id)
