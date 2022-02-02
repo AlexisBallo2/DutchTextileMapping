@@ -477,7 +477,7 @@ switch_func <- function(input,session){
              # assign3$textile_color_arch = str_replace(assign3$textile_color_arch, "BLUE / AZURE", "BLUE")
              text_choices <- assign3 %>%
                filter(orig_loc_region_arch == input$map_shape_click$id)
-             updateSelectInput(session = session, inputId = "inputChoice_two", choices = c("All", unique(text_choices$textile_color_arch)))
+             updateSelectInput(session = session, inputId = "inputChoice_two", choices = c("All Colors", unique(text_choices$textile_color_arch)))
              
            }
          },
@@ -490,7 +490,7 @@ switch_func <- function(input,session){
              assign3$textile_color_arch = str_replace(assign3$textile_color_arch, "STRIPES", "STRIPED")
              text_choices <- assign3 %>%
                filter(orig_loc_region_arch == input$map_shape_click$id)
-             updateSelectInput(session = session, inputId = "inputChoice_two", choices = c("All", unique(text_choices$textile_pattern_arch)))
+             updateSelectInput(session = session, inputId = "inputChoice_two", choices = c("All Patterns", unique(text_choices$textile_pattern_arch)))
              
            }
          }
@@ -845,6 +845,49 @@ server <- function(input, output, session) {
 
                    
                    },
+                 "All Colors" = {
+                   #Change graph back to normal
+                   reset_map(output,input, NULL)
+                   
+                   
+                   
+                   g<- assign3 %>%
+                     ggplot()+
+                     geom_histogram(mapping = aes(x = as.numeric(real_quantity)),
+                                    bins = 25,
+                                    color = "black",
+                                    fill = "black"
+                     ) +
+                     labs(title = paste("Distribution of shipment sizes based on", input$inputChoice_two, "from", input$map_shape_click$id), x = "Textile quantity (singular shipment)") +
+                     xlim(0,5000)
+                   
+                   ggplotly(g)
+                   
+                   
+                   
+                 },
+                 "All Patterns" = {
+                   #Change graph back to normal
+                   reset_map(output,input, NULL)
+                   
+                   
+                   
+                   g<-assign3 %>%
+                     ggplot()+
+                     geom_histogram(mapping = aes(x = as.numeric(real_quantity)),
+                                    bins = 25,
+                                    color = "black",
+                                    fill = "black"
+                     ) +
+                     labs(title = paste("Distribution of shipment sizes based on", input$inputChoice_two, "from", input$map_shape_click$id), x = "Textile quantity (singular shipment)") +
+                     xlim(0,5000)
+                   
+                   
+                   ggplotly(g)
+                   
+                   
+                   
+                 },
 
 
                    "Both" ={
@@ -923,7 +966,7 @@ server <- function(input, output, session) {
                         destination_map(input,output,session)
                        
                        },
-                   
+                 
                    
                    
                    "Year" = {
