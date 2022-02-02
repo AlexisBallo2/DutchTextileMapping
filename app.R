@@ -586,6 +586,13 @@ origin_map<- function(input,output,session){
   
   })
   
+  if(is_null(input$map_shape_click$id)) {
+    df <- data.frame(
+      label=c("No available data"),
+      x = c(1.5), y =c(1.5))
+    g <- ggplot(df, aes(x=x, y=y, label=label)) + geom_text(mapping = aes(x = x, y = y), size = 10)
+    ggplotly(g)
+  } else {
   g<- assign3 %>% 
     group_by(orig_loc_port_arch, textile_name) %>% 
     filter(piece_rate < 20) %>% #For now, filtering by cheap pieces
@@ -598,7 +605,7 @@ origin_map<- function(input,output,session){
     scale_fill_gradient(low = "#460B2F", high = "#E36414", na.value = NA)
   
   ggplotly(g)
-  
+  }
 }
 
 destination_map<- function(input,output,session){
@@ -712,7 +719,6 @@ server <- function(input, output, session) {
         
         #something to show before a location is clicked
         #not workign yet...
-        print("here still")
         df <- data.frame(
           label=c("No available data"),
           x = c(1.5), y =c(1.5))
@@ -725,7 +731,6 @@ server <- function(input, output, session) {
       }
       #if the input is a textile... graph it
       if(input$inputChoice_two %in% unique(assign3$textile_name)) {
-        print("x here")
         reset_map(output,input, input$map_shape_click$id)
         data <-  assign3 %>%
           filter(orig_loc_region_arch == input$map_shape_click$id)%>%
@@ -875,7 +880,7 @@ server <- function(input, output, session) {
                    
                    "Destination" = {
                        
-                      destination_map(input,output,session)
+                        destination_map(input,output,session)
                        
                        },
                    
@@ -933,13 +938,17 @@ server <- function(input, output, session) {
                   },
                  "Pattern" = {
                    
-                 }
-          )
-                   
-                 
-        }
-    })
+                 }, 
+                 {
+                df <- data.frame(
+                label=c("No available data"),
+                x = c(1.5), y =c(1.5))
+                g <- ggplot(df, aes(x=x, y=y, label=label)) + geom_text(mapping = aes(x = x, y = y), size = 10)
+                ggplotly(g)
+              }
+          )}
     
+    })
 }
 #live loading of shiny app
 options(shiny.reactlog= TRUE)
