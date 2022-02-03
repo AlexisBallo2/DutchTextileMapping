@@ -501,184 +501,126 @@ switch_func <- function(input,session){
 
 
 #Resets the map
-reset_map <- function(output,input,location){
+reset_map <- function(output,input,location, type){
   
-  output$map <- renderLeaflet({
-    
-    print(paste(input$map_shape_click$id, "resetting map..."))
-    
-    return_graph <- ab %>% 
-      leaflet() %>%
-      addProviderTiles("CartoDB.PositronNoLabels")
-    
-      if(is_null(input$map_shape_click$id)) {
-        return_graph <- return_graph %>% 
-          addPolygons(color = "black",
-                     label = ~new.country,
-                     layerId = ab@data$new.country,
-                     opacity = 1,
-                     weight = 1,
-                     stroke = 1) %>%
-          setView(65.25,10, 2)
-      } else {
+  
+    output$map <- renderLeaflet({
+      
+      #defaults
+      dateFtoUse <- ab
+      myfillCol <- "black"
+      layerIDVar <- ab@data$new.country
+      legendYesNo <- "no"
+      print(paste(input$map_shape_click$id, "resetting map..."))
+      if(is_null(type)) {
+        
+        
+        #for if we want origin or destination
+      } else{
+        if (type == "originMap") {
+          dateFtoUse <- ab.origin
+          myfillCol <- ~color(export.value)
+          layerIDVar <- ab.origin@data$new.country
+          legendYesNo <- "origin"
+        } else if (type == "destMap") {
+          dateFtoUse <- ab.dest
+          myfillCol <- ~color2(import.value)
+          layerIDVar <- ab.dest@data$new.country
+          legendYesNo <- "dest"
+          } 
+      }
+      
+      return_graph <- dateFtoUse %>% 
+        leaflet() %>%
+        addProviderTiles("CartoDB.PositronNoLabels")
+      
+      if(is_null(input$map_shape_click$id) || (type == "originMap" || type == "destMap") || is_null((type))) {
+            return_graph <- return_graph %>% 
+              addPolygons(color = "black",
+                          label = ~new.country,
+                          layerId = layerIDVar,
+                          fillColor = myfillCol,
+                          fillOpacity = 1,
+                          opacity = 1,
+                          weight = 1,
+                          stroke = 1) %>%  setView(65.25,10, 2)
+            
+            #to show the legend for the origin map
+            if(legendYesNo == "origin") {
+              return_graph <- return_graph %>% setView(60.25,-10, 2)  %>% #Sets view to center
+                addLegend("bottomleft", pal = color, values = ~export.value,
+                          title = "Total Value (Guldens) Exported",
+                          na.label = "No Exports",
+                          labFormat = labelFormat(suffix = "g"),
+                          opacity = 1)
+            } else if (legendYesNo == "dest"){
+              return_graph <- return_graph %>% 
+                addLegend("bottomleft", pal = color2, values = ~import.value,
+                           title = "Total Value (Guldens) Imported",
+                           na.label = "No Imports",
+                           labFormat = labelFormat(suffix = "g"),
+                           opacity = 1)
+            } 
+      } 
+      if(!is_null(input$map_shape_click) && ((type != "originMap" && type != "destMap") || is_null(type) )) {
           return_graph <- return_graph %>% 
-            addPolygons(color = ifelse(input$map_shape_click$id == ab@data$new.country, "red", "black" ),
+            addPolygons(color = "black",
                         label = ~new.country,
                         layerId = ab@data$new.country,
+                        fillColor = ifelse(input$map_shape_click$id == ab@data$new.country, "red", "black" ),
+                        fillOpacity = 1,
                         opacity = 1,
                         weight = 1,
                         stroke = 1) %>%
             setView(65.25,10, 2)
-      }
+        } 
+       
       
-    if(!is_null(location)) {
-      print(paste(input$map_shape_click$id,input$inputChoice_two))
-      mayb <- assign3 %>%
-        filter(orig_loc_region_arch == input$map_shape_click$id & textile_name == input$inputChoice_two)
-      
-      maybe <- mayb[ , c("orig_loc_region_arch", "orig_loc_lat", "orig_loc_long", "dest_loc_port","dest_loc_lat", "dest_loc_long", "dest_loc_region_arch")]
-      
-      #adding exporting loc circle
-      return_graph <- addCircleMarkers(return_graph, 
-                                       lat = ~maybe$orig_loc_lat,
-                                       lng = ~maybe$orig_loc_long,
-                                       label = ~maybe$orig_loc_region_arch,
-                                       radius = 2,
-                                       color = "red"
-      )
-      
-      #adding importing loc circle
-      return_graph <- addCircleMarkers(return_graph, 
-                                       lat = ~maybe$dest_loc_lat,
-                                       lng = ~maybe$dest_loc_long,
-                                       label = ~maybe$dest_loc_region_arch,
-                                       radius = 2,
-                                       color = "blue" 
-      )
-      
-      for(i in 1:nrow(maybe)){
+      #This adds the lines for the textile
+      if(!is_null(location)) {
+        print(paste(input$map_shape_click$id,input$inputChoice_two))
+        mayb <- assign3 %>%
+          filter(orig_loc_region_arch == input$map_shape_click$id & textile_name == input$inputChoice_two)
         
-        return_graph <-  addPolylines(return_graph,
-                                      lat = as.numeric(maybe[i, c(2, 5)]),
-                                      lng = as.numeric(maybe[i, c(3, 6)]),
-                                      label = paste(input$map_shape_click$id, maybe$orig_loc_region_arch),
-                                      weight = 1,
-                                      color = "purple") %>%
-                          addLegend("bottomleft",colors = c("red", "blue"), labels = c("Sent", "Recieved"),
-                                    title = " ",
-                                    na.label = "No Exports",
-                                    labFormat = labelFormat(suffix = "g"),
-                                    opacity = 1
-          ) 
-      }
-    } 
-    
-    return_graph
-  })
-}
-
-origin_map<- function(input,output,session){
-  
-  output$map <- renderLeaflet({
-    
-    #print(input$map_shape_click$id)
-
-    switch_func(input,session)
-
-    return_graph <- ab.origin %>%
-        leaflet() %>%
-        addTiles %>%
-        addPolygons(color = "black",
-                    label = ~new.country,
-                    layerId = ab.origin@data$new.country,
-                    fillColor = ~color(export.value),
-                    popup = ~export.value,
-                    fillOpacity = 1,
-                    opacity = 1,
-                    weight = 1,
-                    stroke = 1) %>%
-                    
-      setView(60.25,-10, 2)  %>% #Sets view to center
-        addLegend("bottomleft", pal = color, values = ~export.value,
-                  title = "Total Value (Guldens) Exported",
-                  na.label = "No Exports",
-                  labFormat = labelFormat(suffix = "g"),
-                  opacity = 1
-        ) 
-  
-    
-    return_graph
-    
-  
-  })
-  
-  if(is_null(input$map_shape_click$id)) {
-    df <- data.frame(
-      label=c("No available data"),
-      x = c(1.5), y =c(1.5))
-    g <- ggplot(df, aes(x=x, y=y, label=label)) + geom_text(mapping = aes(x = x, y = y), size = 10)
-    ggplotly(g)
-  } else {
-  g<- assign3 %>% 
-    group_by(orig_loc_port_arch, textile_name) %>% 
-    filter(piece_rate < 20) %>% #For now, filtering by cheap pieces
-    filter(orig_loc_region_arch == input$map_shape_click$id) %>%
-    summarise(mean_value = mean(piece_rate))%>%
-    ggplot()+
-    geom_tile(aes(x = orig_loc_port_arch, y= textile_name, fill = mean_value))+
-    labs(title = paste("A chart of all exports from", input$map_shape_click$id, "ports") ,x = "Origin Port", y = "Textile") + 
-    guides(fill=guide_legend(title="Mean Value per Piece")) +
-    scale_fill_gradient(low = "#460B2F", high = "#E36414", na.value = NA)
-  
-  ggplotly(g)
-  }
-}
-
-destination_map<- function(input,output,session){
-    
-    output$map <- renderLeaflet({
+        maybe <- mayb[ , c("orig_loc_region_arch", "orig_loc_lat", "orig_loc_long", "dest_loc_port","dest_loc_lat", "dest_loc_long", "dest_loc_region_arch")]
+        
+        #adding exporting loc circle
+        return_graph <- addCircleMarkers(return_graph, 
+                                         lat = ~maybe$orig_loc_lat,
+                                         lng = ~maybe$orig_loc_long,
+                                         label = ~maybe$orig_loc_region_arch,
+                                         radius = 2,
+                                         color = "red"
+        )
+        
+        #adding importing loc circle
+        return_graph <- addCircleMarkers(return_graph, 
+                                         lat = ~maybe$dest_loc_lat,
+                                         lng = ~maybe$dest_loc_long,
+                                         label = ~maybe$dest_loc_region_arch,
+                                         radius = 2,
+                                         color = "blue" 
+        )
+        
+        for(i in 1:nrow(maybe)){
+          
+          return_graph <-  addPolylines(return_graph,
+                                        lat = as.numeric(maybe[i, c(2, 5)]),
+                                        lng = as.numeric(maybe[i, c(3, 6)]),
+                                        label = paste(input$map_shape_click$id, maybe$orig_loc_region_arch),
+                                        weight = 1,
+                                        color = "purple") %>%
+            addLegend("bottomleft",colors = c("red", "blue"), labels = c("Sent", "Recieved"),
+                      title = " ",
+                      na.label = "No Exports",
+                      labFormat = labelFormat(suffix = "g"),
+                      opacity = 1
+            ) 
+        }
+      } 
       
-      print(paste(input$map_shape_click$id, "destination"))
-      
-      switch_func(input,session)
-      
-      return_graph <- ab.dest %>%
-        leaflet() %>%
-        addTiles %>%
-        addPolygons(color = "black", 
-                    label = ~new.country,
-                    layerId = ab.dest@data$new.country,
-                    fillColor = ~color2(import.value),
-                    popup = ~import.value,
-                    fillOpacity = 1,
-                    opacity = 1,
-                    weight = 1,
-                    stroke = 1) %>%
-        setView(60.25,-10, 2) %>% #Sets view to center
-        addLegend("bottomleft", pal = color2, values = ~import.value,
-                  title = "Total Value (Guldens) Imported",
-                  na.label = "No Imports",
-                  labFormat = labelFormat(suffix = "g"),
-                  opacity = 1)
-    
       return_graph
-    
-    
-  })
-  
-  g<- assign3 %>% 
-    group_by(orig_loc_port_arch, textile_name) %>% 
-    filter(piece_rate < 20) %>% #For now, filtering by cheap pieces
-    filter(orig_loc_region_arch == input$map_shape_click$id) %>%
-    summarise(mean_value = mean(piece_rate))%>%
-    ggplot()+
-    geom_tile(aes(x = orig_loc_port_arch, y= textile_name, fill = mean_value))+
-    labs(title = paste("A chart of all exports from", input$map_shape_click$id, "ports") ,x = "Origin Port", y = "Textile") + 
-    guides(fill=guide_legend(title="Mean Value per Piece")) +
-    scale_fill_gradient(low = "#460B2F", high = "#E36414", na.value = NA)
-  
-  ggplotly(g)
-  
+    })
 }
 
 
@@ -735,10 +677,10 @@ server <- function(input, output, session) {
         switch_func(input,session)
     })
     
-    reset_map(output,input, NULL)
+    reset_map(output,input, NULL, NULL)
     #the bottom plots
     output$plot <- renderPlotly({
-      print(input$map_shape_click)
+      print(input$map_shape_click$id)
       
       
       
@@ -758,7 +700,8 @@ server <- function(input, output, session) {
       }
       #if the input is a textile... graph it
       if(input$inputChoice_two %in% unique(assign3$textile_name)) {
-        reset_map(output,input, input$map_shape_click$id)
+        print("in here")
+        reset_map(output,input, input$map_shape_click$id, NULL)
         data <-  assign3 %>%
           filter(orig_loc_region_arch == input$map_shape_click$id)%>%
           filter(textile_name == input$inputChoice_two )
@@ -779,7 +722,8 @@ server <- function(input, output, session) {
         }
         } 
       else if(input$inputChoice_two %in% unique(assign3$textile_color_arch)) {
-        reset_map(output,input, input$map_shape_click$id)
+        reset_map(output,input, input$map_shape_click$id, NULL)
+        print("in this loop")
         data <- assign3 %>%
           filter(orig_loc_region_arch == input$map_shape_click$id)%>%
           filter(textile_color_arch == input$inputChoice_two)
@@ -802,7 +746,7 @@ server <- function(input, output, session) {
           
         }
       }else if(input$inputChoice_two %in% unique(assign3$textile_pattern_arch)) {
-        reset_map(output,input, input$map_shape_click$id)
+        reset_map(output,input, input$map_shape_click$id, NULL)
         data <- assign3 %>%
           filter(orig_loc_region_arch == input$map_shape_click$id)%>%
           filter(textile_pattern_arch == input$inputChoice_two)
@@ -829,7 +773,7 @@ server <- function(input, output, session) {
           switch(input$inputChoice_two,
                    "All" = {
                        #Change graph back to normal
-                        reset_map(output,input, NULL)
+                        reset_map(output,input, NULL, NULL)
                      
 
                        
@@ -857,7 +801,7 @@ server <- function(input, output, session) {
                    },
                  "All Colors" = {
                    #Change graph back to normal
-                   reset_map(output,input, NULL)
+                   reset_map(output,input, NULL, NULL)
                    
                    
                    
@@ -878,7 +822,7 @@ server <- function(input, output, session) {
                  },
                  "All Patterns" = {
                    #Change graph back to normal
-                   reset_map(output,input, NULL)
+                   reset_map(output,input, NULL, NULL)
                    
                    
                    
@@ -902,7 +846,7 @@ server <- function(input, output, session) {
 
                    "Both" ={
                        #Change the graph back to normal
-                       reset_map(output,input, NULL)
+                       reset_map(output,input, NULL, NULL)
                        
                        assign3 %>%
                            filter(orig_loc_region_arch == input$map_shape_click$id)%>%
@@ -914,7 +858,7 @@ server <- function(input, output, session) {
                    },
                    
                    "WIC" = {
-                      reset_map(output,input, NULL)
+                      reset_map(output,input, NULL, NULL)
                       
                      dataforWIC <- assign3 %>%
                        filter(orig_loc_region_arch == input$map_shape_click$id)%>%
@@ -941,7 +885,7 @@ server <- function(input, output, session) {
                    
                    "VOC" = {
                      #Change the graph back to normal
-                     reset_map(output,input, NULL)
+                     reset_map(output,input, NULL, NULL)
                      
                      dataforVOC <- assign3 %>%
                        filter(orig_loc_region_arch == input$map_shape_click$id)%>%
@@ -966,8 +910,7 @@ server <- function(input, output, session) {
                    
                    "Origin" = {
                       
-                         origin_map(input,output,session)
-                          #print(input$map_shape_click)
+                         reset_map(output,input,NULL, "originMap")
                           if(is_null(input$map_shape_click$id)) {
                             return()
                           } else {
@@ -994,27 +937,26 @@ server <- function(input, output, session) {
                    
                    "Destination" = {
                        
-                        destination_map(input,output,session)
-                        # 
-                        # if(is_null(input$map_shape_mouseout$id)) {
-                        #   return()
-                        # } else {
-                        #   g<- assign3 %>% 
-                        #     group_by(dest_loc_port_arch, textile_name) %>% 
-                        #     filter(piece_rate < 20) %>% #For now, filtering by cheap pieces
-                        #     filter(dest_loc_region_arch == input$map_shape_mouseout$id) %>%
-                        #     summarise(total_value = sum(real_guldens))%>%
-                        #     ggplot()+
-                        #     geom_tile(aes(x = dest_loc_port_arch, y= textile_name, fill = total_value))+
-                        #     labs(title = paste("A chart of all imports to", input$map_shape_mouseout$id, "ports") ,x = "Origin Port", y = "Textile") + 
-                        #     guides(fill=guide_legend(title="Mean Value per Piece")) +
-                        #     scale_fill_gradient(low = "#460B2F", high = "#E36414", na.value = NA) +
-                        #     theme(plot.title = element_text(size = 10),
-                        #           axis.title.x = element_text(size = 10),  
-                        #           axis.title.y = element_text(size = 10)) 
-                        #   
-                        #   ggplotly(g)
-                        # }
+                        reset_map(output,input,NULL, "destMap")
+                        if(is_null(input$map_shape_click$id)) {
+                          return()
+                        } else {
+                          g<- assign3 %>%
+                            group_by(dest_loc_port_arch, textile_name) %>%
+                            filter(piece_rate < 20) %>% #For now, filtering by cheap pieces
+                            filter(dest_loc_region_arch == input$map_shape_click$id) %>%
+                            summarise(total_value = sum(real_guldens))%>%
+                            ggplot()+
+                            geom_tile(aes(x = dest_loc_port_arch, y= textile_name, fill = total_value))+
+                            labs(title = paste("A chart of all imports to", input$map_shape_click$id, "ports") ,x = "Origin Port", y = "Textile") +
+                            guides(fill=guide_legend(title="Mean Value per Piece")) +
+                            scale_fill_gradient(low = "#460B2F", high = "#E36414", na.value = NA) +
+                            theme(plot.title = element_text(size = 10),
+                                  axis.title.x = element_text(size = 10),
+                                  axis.title.y = element_text(size = 10))
+
+                          ggplotly(g)
+                        }
                        
                        },
                  
@@ -1022,7 +964,7 @@ server <- function(input, output, session) {
                    
                    "Year" = {
                        
-                     reset_map(output,input, NULL)
+                     reset_map(output,input, NULL, NULL)
 
                      require(scales)
                      temp <- assign3 %>%
@@ -1051,7 +993,7 @@ server <- function(input, output, session) {
                      }
                    },
                   "Color" = {
-                   reset_map(output,input, NULL)
+                   reset_map(output,input, NULL, NULL)
                     
                     assign3$textile_color_arch = toupper(assign3$textile_color_arch)
                     assign3$textile_color_arch = str_replace(assign3$textile_color_arch, "BROWN-BLUE", "BROWN BLUE")
