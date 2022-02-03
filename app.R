@@ -609,14 +609,15 @@ reset_map <- function(output,input,location, type){
                                         lng = as.numeric(maybe[i, c(3, 6)]),
                                         label = paste(input$map_shape_click$id, maybe$orig_loc_region_arch),
                                         weight = 1,
-                                        color = "purple") %>%
-            addLegend("bottomleft",colors = c("red", "blue"), labels = c("Sent", "Recieved"),
-                      title = " ",
-                      na.label = "No Exports",
-                      labFormat = labelFormat(suffix = "g"),
-                      opacity = 1
-            ) 
+                                        color = "purple")
+          
         }
+        return_graph <- return_graph %>%
+          addLegend("bottomleft",colors = c("red", "blue"), labels = c("Sent", "Recieved"),
+                    title = " ",
+                    na.label = "No Exports",
+                    labFormat = labelFormat(suffix = "g"),
+                    opacity = 1)
       } 
       
       return_graph
@@ -630,7 +631,7 @@ ui <- fluidPage(
   tags$head(
     tags$link(rel = "stylesheet", type = "text/css", href = "index.css")
   ),
-  titlePanel("Dutch Textile Trade"),
+  titlePanel("The Dutch Textile Trade"),
       tags$div(class = "container", 
                tags$div(class = "map",
                          leafletOutput(outputId = "map", width = "100%", height = "100%")
