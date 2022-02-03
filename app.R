@@ -661,7 +661,8 @@ ui <- fluidPage(
                                              choices = NULL)
                                  ),
                         tags$div(class = "inlineOptions",
-                                 tags$label("Download Data: "),tags$br(),
+                                 tags$label("Download Data: "),
+                                 tags$br(),
                                  downloadButton(outputId = "download_id",
                                              label = "Download",
                                              choices = NULL)
@@ -676,6 +677,17 @@ ui <- fluidPage(
 )
 
 server <- function(input, output, session) {
+  download_data<<- assign3
+  output$download_id <- downloadHandler(
+      filename = function() {
+        paste('data-', Sys.Date(), '.csv', sep='')
+      },
+      content = function(con) {
+        write.csv(download_data, con)
+      }
+    )
+    
+    
   output$selectedCountry <- renderText({
     if(is_null(input$map_shape_click$id)) {
       "Please Select a Location"
@@ -718,6 +730,8 @@ server <- function(input, output, session) {
           filter(orig_loc_region_arch == input$map_shape_click$id)%>%
           filter(textile_name == input$inputChoice_two )
         print(paste("count: ", count(data)))
+        
+        download_data <<- data
         if(count(data) == 0) {
           df <- data.frame(
             label=c("No available data"),
@@ -741,6 +755,7 @@ server <- function(input, output, session) {
         data <- assign3 %>%
           filter(orig_loc_region_arch == input$map_shape_click$id)%>%
           filter(textile_color_arch == input$inputChoice_two)
+        download_data <<- data
         
         if(input$inputChoice_two == "blue" | input$inputChoice_two == "Blue"){
           colorHist <- "blue"
@@ -978,6 +993,8 @@ server <- function(input, output, session) {
 
                    "Both" ={
                        #Change the graph back to normal
+                     download_data <<-  assign3 %>%
+                       filter(orig_loc_region_arch == input$map_shape_click$id)
                      
                      if(is_null(input$map_shape_click$id)) {
                        df <- data.frame(
@@ -1012,6 +1029,7 @@ server <- function(input, output, session) {
                      dataforWIC <- assign3 %>%
                        filter(orig_loc_region_arch == input$map_shape_click$id)%>%
                        filter(company == "WIC")
+                     download_data <<- dataforWIC
                      
                      if(nrow(dataforWIC) == 0) {
                        df <- data.frame(
@@ -1048,7 +1066,7 @@ server <- function(input, output, session) {
                        filter(orig_loc_region_arch == input$map_shape_click$id)%>%
                        filter(company == "VOC") 
                      
-  
+                     download_data <<- dataforVOC
                      if(nrow(dataforVOC) == 0) {
                        df <- data.frame(
                          label=c("No available data"),
@@ -1080,11 +1098,14 @@ server <- function(input, output, session) {
                           if(is_null(input$map_shape_click$id)) {
                             return()
                           } else {
-                            g<- assign3 %>% 
-                              group_by(orig_loc_port_arch, textile_name) %>% 
+                            
+                            curData <- assign3 %>% group_by(orig_loc_port_arch, textile_name) %>% 
                               filter(piece_rate < 20) %>% #For now, filtering by cheap pieces
                               filter(orig_loc_region_arch == input$map_shape_click$id) %>%
-                              summarise(total_value = sum(real_guldens))%>%
+                              summarise(total_value = sum(real_guldens))
+                            
+                            download_data <<- curData
+                            g<- curData %>%
                               ggplot()+
                               geom_tile(aes(x = orig_loc_port_arch, y= textile_name, fill = total_value))+
                               
@@ -1116,11 +1137,15 @@ server <- function(input, output, session) {
                         if(is_null(input$map_shape_click$id)) {
                           return()
                         } else {
-                          g<- assign3 %>%
+                          destData <- assign3 %>%
                             group_by(dest_loc_port_arch, textile_name) %>%
                             filter(piece_rate < 20) %>% #For now, filtering by cheap pieces
                             filter(dest_loc_region_arch == input$map_shape_click$id) %>%
-                            summarise(total_value = sum(real_guldens))%>%
+                            summarise(total_value = sum(real_guldens))
+                          
+                          download_data <<- destData 
+                          
+                          g<- destData %>%
                             ggplot()+
                             geom_tile(aes(x = dest_loc_port_arch, y= textile_name, fill = total_value))+
                             labs(title = paste("A chart of all imports to", input$map_shape_click$id, "ports") ,x = "Origin Port", y = "Textile") +
@@ -1165,7 +1190,8 @@ server <- function(input, output, session) {
                          
                      } else {
                        temp2 <- aggregate(as.numeric(temp$real_quantity), by = list(year = temp$orig_yr), FUN = sum,na.rm=TRUE)
-
+                      
+                       download_data <<- temp2
                      
                      ggplot(data = temp2) +
                        geom_col(mapping = aes(x = as.factor(year), 
