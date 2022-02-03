@@ -16,8 +16,7 @@ h2 {
   margin:0;
   padding:20px;
   margin-bottom: 30px;
-  border-bottom: 2px solid black;
-  border-top: 2px solid black;
+  box-shadow: 5px 5px darkgrey;
 }
 
 
