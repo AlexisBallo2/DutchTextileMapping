@@ -125,6 +125,13 @@ for(i in 1:length(assign3$dest_loc_port)){
   }
 }
 
+#Change Java to Bantam
+for(i in 1:length(assign3$dest_loc_region_arch)){ 
+  if (assign3$dest_loc_region_arch[i] %in% c("Java")){ 
+    assign3$dest_loc_region_arch[i] <- "Bantam"
+    
+  }
+}
 
 #Fill Destination Region Elmina, Ardra, Angola, Arguin from historical port data
 for(i in 1:length(assign3$dest_loc_port_arch)){ 
@@ -277,7 +284,7 @@ bengalE@data <- data.frame() %>%
 
 capeTown@data <- data.frame() %>%
     add_column(Country = "Country") %>%
-    add_row(Country = "Cape Town")
+    add_row(Country = "Cape of Good Hope")
 
 ceylon@data <- data.frame() %>%
     add_column(Country = "Country") %>%
@@ -365,7 +372,7 @@ dutchrep@data <- data.frame() %>%
 
 bantam@data <- data.frame() %>%
     add_column(Country = "Country") %>%
-    add_row(Country = "Java")
+    add_row(Country = "Bantam")
 
 arguin@data <- data.frame() %>%
     add_column(Country = "Country") %>%
