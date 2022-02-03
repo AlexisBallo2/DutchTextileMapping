@@ -772,6 +772,14 @@ server <- function(input, output, session) {
       else {
           switch(input$inputChoice_two,
                    "All" = {
+                     
+                     if(is_null(input$map_shape_click$id)) {
+                       df <- data.frame(
+                         label=c("No available data"),
+                         x = c(1.5), y =c(1.5))
+                       g <- ggplot(df, aes(x=x, y=y, label=label)) + geom_text(mapping = aes(x = x, y = y), size = 10)
+                       ggplotly(g)
+                     } else{
                        #Change graph back to normal
                         reset_map(output,input, NULL, NULL)
                      
@@ -796,10 +804,18 @@ server <- function(input, output, session) {
 
                    ggplotly(g)
                    
-
+                     }
                    
                    },
                  "All Colors" = {
+                   
+                   if(is_null(input$map_shape_click$id)) {
+                     df <- data.frame(
+                       label=c("No available data"),
+                       x = c(1.5), y =c(1.5))
+                     g <- ggplot(df, aes(x=x, y=y, label=label)) + geom_text(mapping = aes(x = x, y = y), size = 10)
+                     ggplotly(g)
+                   } else{
                    #Change graph back to normal
                    reset_map(output,input, NULL, NULL)
                    
@@ -817,11 +833,19 @@ server <- function(input, output, session) {
                    
                    ggplotly(g)
                    
-                   
+                   }
                    
                  },
                  "All Patterns" = {
                    #Change graph back to normal
+                   
+                   if(is_null(input$map_shape_click$id)) {
+                     df <- data.frame(
+                       label=c("No available data"),
+                       x = c(1.5), y =c(1.5))
+                     g <- ggplot(df, aes(x=x, y=y, label=label)) + geom_text(mapping = aes(x = x, y = y), size = 10)
+                     ggplotly(g)
+                   } else{
                    reset_map(output,input, NULL, NULL)
                    
                    
@@ -840,12 +864,20 @@ server <- function(input, output, session) {
                    ggplotly(g)
                    
                    
-                   
+                   }
                  },
 
 
                    "Both" ={
                        #Change the graph back to normal
+                     
+                     if(is_null(input$map_shape_click$id)) {
+                       df <- data.frame(
+                         label=c("No available data"),
+                         x = c(1.5), y =c(1.5))
+                       g <- ggplot(df, aes(x=x, y=y, label=label)) + geom_text(mapping = aes(x = x, y = y), size = 10)
+                       ggplotly(g)
+                     } else{
                        reset_map(output,input, NULL, NULL)
                        
                        assign3 %>%
@@ -855,9 +887,19 @@ server <- function(input, output, session) {
                                     fill = "#FB8B24") +
                            theme_bw() +
                           labs(title = paste("Quanity of Textiles Shipped out of",input$map_shape_click$id ,"by Both VOC/WIC"), x ="Year", y = "Total Quantity")
+                     }
                    },
                    
                    "WIC" = {
+                     
+                     if(is_null(input$map_shape_click$id)) {
+                       df <- data.frame(
+                         label=c("No available data"),
+                         x = c(1.5), y =c(1.5))
+                       g <- ggplot(df, aes(x=x, y=y, label=label)) + geom_text(mapping = aes(x = x, y = y), size = 10)
+                       ggplotly(g)
+                     } else {
+                       
                       reset_map(output,input, NULL, NULL)
                       
                      dataforWIC <- assign3 %>%
@@ -879,11 +921,19 @@ server <- function(input, output, session) {
                        
                      }
                        
-                      
+                     }
                        
                    },
                    
                    "VOC" = {
+                     
+                     if(is_null(input$map_shape_click$id)) {
+                       df <- data.frame(
+                         label=c("No available data"),
+                         x = c(1.5), y =c(1.5))
+                       g <- ggplot(df, aes(x=x, y=y, label=label)) + geom_text(mapping = aes(x = x, y = y), size = 10)
+                       ggplotly(g)
+                     } else{
                      #Change the graph back to normal
                      reset_map(output,input, NULL, NULL)
                      
@@ -905,10 +955,19 @@ server <- function(input, output, session) {
                              theme_bw() +
                             labs(title = paste("Quanity of Textiles Shipped out of",input$map_shape_click$id ,"by the", input$inputChoice_two, "Company"), x ="Year", y = "Total Quantity")
                      }  
+                     }
                    },
                    
                    
                    "Origin" = {
+                     
+                     if(is_null(input$map_shape_click$id)) {
+                       df <- data.frame(
+                         label=c("No available data"),
+                         x = c(1.5), y =c(1.5))
+                       g <- ggplot(df, aes(x=x, y=y, label=label)) + geom_text(mapping = aes(x = x, y = y), size = 10)
+                       ggplotly(g)
+                     } else{
                       
                          reset_map(output,input,NULL, "originMap")
                           if(is_null(input$map_shape_click$id)) {
@@ -931,11 +990,20 @@ server <- function(input, output, session) {
                             
                             ggplotly(g)
                           }
-                      }
+                     }
+                   }
                    ,
                    
                    
                    "Destination" = {
+                     
+                     if(is_null(input$map_shape_click$id)) {
+                       df <- data.frame(
+                         label=c("No available data"),
+                         x = c(1.5), y =c(1.5))
+                       g <- ggplot(df, aes(x=x, y=y, label=label)) + geom_text(mapping = aes(x = x, y = y), size = 10)
+                       ggplotly(g)
+                     } else{
                        
                         reset_map(output,input,NULL, "destMap")
                         if(is_null(input$map_shape_click$id)) {
@@ -958,11 +1026,21 @@ server <- function(input, output, session) {
                           ggplotly(g)
                         }
                        
+                     }
+                       
                        },
                  
                    
                    
                    "Year" = {
+                     
+                     if(is_null(input$map_shape_click$id)) {
+                       df <- data.frame(
+                         label=c("No available data"),
+                         x = c(1.5), y =c(1.5))
+                       g <- ggplot(df, aes(x=x, y=y, label=label)) + geom_text(mapping = aes(x = x, y = y), size = 10)
+                       ggplotly(g)
+                     } else{
                        
                      reset_map(output,input, NULL, NULL)
 
@@ -991,8 +1069,18 @@ server <- function(input, output, session) {
                        labs(title = "Total Quantity of All Textiles Shipped", x = "Year", y = "Textile Quantity") +
                        scale_fill_manual(values=c("#FB8B24"))
                      }
+                     }
                    },
                   "Color" = {
+                    
+                    if(is_null(input$map_shape_click$id)) {
+                      df <- data.frame(
+                        label=c("No available data"),
+                        x = c(1.5), y =c(1.5))
+                      g <- ggplot(df, aes(x=x, y=y, label=label)) + geom_text(mapping = aes(x = x, y = y), size = 10)
+                      ggplotly(g)
+                    } else{
+                      
                    reset_map(output,input, NULL, NULL)
                     
                     assign3$textile_color_arch = toupper(assign3$textile_color_arch)
@@ -1010,10 +1098,9 @@ server <- function(input, output, session) {
                      labs(title = paste("Distribution of shipment sizes based on", "Textile Color"), x = "Textile quantity (singular shipment)") +
                      xlim(0,5000)
                      # facet_wrap(~(textile_color_arch)
+                    }
                   },
-                 "Pattern" = {
-                   
-                 }, 
+                 
                  {
                   df <- data.frame(
                   label=c("No available data"),
