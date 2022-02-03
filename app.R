@@ -660,6 +660,12 @@ ui <- fluidPage(
                                              label = "Choose what you would like to graph",
                                              choices = NULL)
                                  ),
+                        tags$div(class = "inlineOptions",
+                                 tags$label("Download Data: "),tags$br(),
+                                 downloadButton(outputId = "download_id",
+                                             label = "Download",
+                                             choices = NULL)
+                        ),
                         
                ),
         ),
