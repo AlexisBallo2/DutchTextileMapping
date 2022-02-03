@@ -873,26 +873,36 @@ server <- function(input, output, session) {
                        #Change graph back to normal
                         reset_map(output,input, NULL, NULL)
                      
-
+            
+                       frametouse <- assign3 %>% 
+                         group_by(orig_loc_port_arch, textile_name) %>% 
+                         filter(piece_rate < 20) %>% #For now, filtering by cheap pieces
+                         filter(orig_loc_region_arch == input$map_shape_click$id) %>%
+                         summarise(total_value = sum(real_guldens))
                        
-                   g<- assign3 %>% 
-                           group_by(orig_loc_port_arch, textile_name) %>% 
-                           filter(piece_rate < 20) %>% #For now, filtering by cheap pieces
-                           filter(orig_loc_region_arch == input$map_shape_click$id) %>%
-                           summarise(total_value = sum(real_guldens))%>%
+                       if(dim(frametouse) == 0) {
+                         df <- data.frame(
+                           label=c("No available data"),
+                           x = c(1.5), y =c(1.5))
+                         g <- ggplot(df, aes(x=x, y=y, label=label)) + geom_text(mapping = aes(x = x, y = y), size = 10)
+                         ggplotly(g)
+                       } else {
+                         g<- frametouse %>%
                            ggplot()+
                            geom_tile(aes(x = orig_loc_port_arch, y= textile_name, fill = total_value))+
-
+                           
                            labs(title = paste("A chart of all exports from", input$map_shape_click$id, "ports") ,x = "Origin Port", y = "Textile") + 
                            guides(fill=guide_legend(title="Mean Value per Piece")) +
                            scale_fill_gradient(low = "#460B2F", high = "#E36414", na.value = NA) +
-                            theme(plot.title = element_text(size = 10),
-                                  axis.title.x = element_text(size = 10),  
-                                  axis.title.y = element_text(size = 10)  
-                                  ) 
+                           theme(plot.title = element_text(size = 10),
+                                 axis.title.x = element_text(size = 10),  
+                                 axis.title.y = element_text(size = 10)  
+                           ) 
+                         
+                         
+                         ggplotly(g)
+                       }
 
-
-                   ggplotly(g)
                    
                      }
                    
@@ -973,8 +983,7 @@ server <- function(input, output, session) {
                        assign3 %>%
                            filter(orig_loc_region_arch == input$map_shape_click$id)%>%
                            ggplot() + 
-                           geom_col(aes(x = dest_yr, y = as.numeric(real_quantity)),
-                                    fill = "#FB8B24") +
+                           geom_col(aes(x = dest_yr, y = as.numeric(real_quantity), fill = company)) +
                            theme_bw() +
                           labs(title = paste("Quanity of Textiles Shipped out of",input$map_shape_click$id ,"by Both VOC/WIC"), x ="Year", y = "Total Quantity")
                      }
