@@ -4,6 +4,7 @@ body {
   background-color : #76b1f5;
   height:100%;
  /* position:absolute; */
+ font-family: "Times New Roman", Times, serif;
 }
 
 .container-fluid {
