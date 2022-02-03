@@ -922,6 +922,7 @@ server <- function(input, output, session) {
                    
                    
                    g<- assign3 %>%
+                     filter(orig_loc_region_arch == input$map_shape_click$id) %>%
                      ggplot()+
                      geom_histogram(mapping = aes(x = as.numeric(real_quantity)),
                                     bins = 25,
@@ -951,6 +952,7 @@ server <- function(input, output, session) {
                    
                    
                    g<-assign3 %>%
+                     filter(orig_loc_region_arch == input$map_shape_click$id) %>%
                      ggplot()+
                      geom_histogram(mapping = aes(x = as.numeric(real_quantity)),
                                     bins = 25,
