@@ -473,8 +473,6 @@ switch_func <- function(input,session){
              return()
            } else {
              #Styling colors
-             # assign3$textile_color_arch = str_replace(assign3$textile_color_arch, "BROWN-BLUE", "BROWN BLUE")
-             # assign3$textile_color_arch = str_replace(assign3$textile_color_arch, "BLUE / AZURE", "BLUE")
              text_choices <- assign3 %>%
                filter(orig_loc_region_arch == input$map_shape_click$id)
              updateSelectInput(session = session, inputId = "inputChoice_two", choices = c("All Colors", unique(text_choices$textile_color_arch)))
@@ -486,8 +484,8 @@ switch_func <- function(input,session){
            if(is_null(input$map_shape_click$id)) {
              return()
            } else {
-             assign3$textile_color_arch = toupper(assign3$textile_pattern_arch)
-             assign3$textile_color_arch = str_replace(assign3$textile_color_arch, "STRIPES", "STRIPED")
+             
+             
              text_choices <- assign3 %>%
                filter(orig_loc_region_arch == input$map_shape_click$id)
              updateSelectInput(session = session, inputId = "inputChoice_two", choices = c("All Patterns", unique(text_choices$textile_pattern_arch)))
@@ -722,52 +720,136 @@ server <- function(input, output, session) {
         }
         } 
       else if(input$inputChoice_two %in% unique(assign3$textile_color_arch)) {
-        reset_map(output,input, input$map_shape_click$id, NULL)
-        print("in this loop")
+        #Change graph back to normal
+        reset_map(output,input, NULL, NULL)
+        print(input$inputChoice_two)
+        
         data <- assign3 %>%
           filter(orig_loc_region_arch == input$map_shape_click$id)%>%
           filter(textile_color_arch == input$inputChoice_two)
-        print(paste("count: ", count(data)))
-        if(count(data) == 0) {
-          df <- data.frame(
-            label=c("No available data"),
-            x = c(1.5), y =c(1.5))
-          ggplot(df, aes(x=x, y=y, label=label)) + geom_text(mapping = aes(x = x, y = y), size = 10)
-        } else {
-          data %>%
-            ggplot()+
-            geom_histogram(mapping = aes(x = as.numeric(real_quantity)),
-                           bins = 25,
-                           color = "black",
-                           fill = "black"
-            ) +
-            labs(title = paste("Distribution of shipment sizes based on", input$inputChoice_two, "from", input$map_shape_click$id), x = "Textile quantity (singular shipment)") +
-            xlim(0,5000)
-          
+        
+        if(input$inputChoice_two == "blue" | input$inputChoice_two == "Blue"){
+          colorHist <- "blue"
+        }else if (input$inputChoice_two == "red" | input$inputChoice_two == "Red"){
+          colorHist <- "red"
+        }else if (input$inputChoice_two == "black" | input$inputChoice_two == "Black"){
+          colorHist <- "black"
+        }else if (input$inputChoice_two == "white" | input$inputChoice_two == "White"){
+          colorHist <- "white"
+        }else {
+          colorHist <- ""
         }
+        
+        switch(input$inputChoice_two,
+               "blue" = {
+                 colorHist <- "blue"
+               },
+               "Blue" = {
+                 colorHist <- "blue"
+               },
+               "red" = {
+                 colorHist <- "red"
+               },
+               "Red" = {
+                 colorHist <- "red"
+               },
+               "black" = {
+                 colorHist <- "black"
+               },
+               "Black" = {
+                 colorHist <- "blue"
+               },
+               "white" = {
+                 colorHist <- "white"
+               },
+               "White" = {
+                 colorHist <- "white"
+               },
+               "yellow" = {
+                 colorHist <- "yellow"
+               },
+               "Yellow" = {
+                 colorHist <- "yellow"
+               },
+               "green" = {
+                 colorHist <- "green"
+               },
+               "Green" = {
+                 colorHist <- "green"
+               },
+               "Blue / Azure" = {
+                 colorHist <- "blue"
+               },
+               "brown-blue" = {
+                 colorHist <- "brown"
+               },
+               "green and blue" = {
+                 colorHist <- "blue"
+               },
+               "Green and White" = {
+                 colorHist <- "green"
+               },
+               "scarlet" = {
+                 colorHist <- "red"
+               },
+               "grey" = {
+                 colorHist <- "grey"
+               },
+               "Brown blue" = {
+                 colorHist <- "brown"
+               },
+               "colored" = {
+                 colorHist <- "black"
+               },
+               "silver" = {
+                 colorHist <- "grey"
+               },
+               "gold" = {
+                 colorHist <- "yellow"
+               },
+               "dark blue" = {
+                 colorHist <- "blue"
+               },
+               {
+                 colorHist <- "black"
+               }
+        )
+        
+        g<-data %>%
+          ggplot()+
+          geom_histogram(mapping = aes(x = as.numeric(real_quantity)),
+                         bins = 25,
+                         color = "black" ,
+                         fill = colorHist,
+          ) +
+          labs(title = paste("Distribution of shipment sizes based on", input$inputChoice_two, "from", input$map_shape_click$id), x = "Textile quantity (singular shipment)") +
+          xlim(0,5000)
+        
+        ggplotly(g)
+        
       }else if(input$inputChoice_two %in% unique(assign3$textile_pattern_arch)) {
-        reset_map(output,input, input$map_shape_click$id, NULL)
+        #Change graph back to normal
+        reset_map(output,input, NULL, NULL)
+        print(input$inputChoice_two)
+        
         data <- assign3 %>%
           filter(orig_loc_region_arch == input$map_shape_click$id)%>%
           filter(textile_pattern_arch == input$inputChoice_two)
-        print(paste("count: ", count(data)))
-        if(count(data) == 0) {
-          df <- data.frame(
-            label=c("No available data"),
-            x = c(1.5), y =c(1.5))
-          ggplot(df, aes(x=x, y=y, label=label)) + geom_text(mapping = aes(x = x, y = y), size = 10)
-        } else {
-          data %>%
-            ggplot()+
-            geom_histogram(mapping = aes(x = as.numeric(real_quantity)),
-                           bins = 25,
-                           color = "black",
-                           fill = "black"
-            ) +
-            labs(title = paste("Distribution of shipment sizes based on", input$inputChoice_two, "from", input$map_shape_click$id), x = "Textile quantity (singular shipment)") +
-            xlim(0,5000)
-          
-        }
+        
+       
+        
+        g<-data %>%
+          ggplot()+
+          geom_histogram(mapping = aes(x = as.numeric(real_quantity)),
+                         bins = 25,
+                         color = "black",
+                         fill = "black"
+          ) +
+          labs(title = paste("Distribution of shipment sizes based on", input$inputChoice_two, "from", input$map_shape_click$id), x = "Textile quantity (singular shipment)") +
+          xlim(0,5000)
+        
+        ggplotly(g)
+         
       }
       else {
           switch(input$inputChoice_two,
@@ -1083,7 +1165,7 @@ server <- function(input, output, session) {
                       
                    reset_map(output,input, NULL, NULL)
                     
-                    assign3$textile_color_arch = toupper(assign3$textile_color_arch)
+                    # assign3$textile_color_arch = toupper(assign3$textile_color_arch)
                     assign3$textile_color_arch = str_replace(assign3$textile_color_arch, "BROWN-BLUE", "BROWN BLUE")
                     assign3$textile_color_arch = str_replace(assign3$textile_color_arch, "BLUE / AZURE", "BLUE")
                    
