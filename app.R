@@ -647,12 +647,12 @@ ui <- fluidPage(
                         ),
                         tags$div(class = "inlineOptions",
                                  selectInput(inputId = "inputChoice",
-                                             label = "Choose identifier!",
+                                             label = "Choose identifier",
                                              choices = c("Export Data", "Company (WIC/VOC)", "Origin", "Destination", "Year", "Color", "Pattern"))
                                  ),
                         tags$div(class = "inlineOptions",
                                  selectInput(inputId = "inputChoice_two",
-                                             label = "Choose what you would like to graph!",
+                                             label = "Choose what you would like to graph",
                                              choices = NULL)
                                  ),
                         
